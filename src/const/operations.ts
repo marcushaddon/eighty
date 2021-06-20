@@ -1,11 +1,11 @@
 import { OperationName } from '../types/operation';
 
 export type HttpMethod = (
-    'GET' | 
-    'POST' |
-    'PUT' |
-    'PATCH' |
-    'DELETE'
+    'get' | 
+    'post' |
+    'put' |
+    'patch' |
+    'delete'
 );
 
 export const Operations: OperationName[] = [
@@ -19,11 +19,11 @@ export const Operations: OperationName[] = [
 ];
 
 export const opMethods: { [ key in OperationName ]: HttpMethod } = {
-    'get': 'GET',
-    'getOne': 'GET',
-    'create': 'POST',
-    'createOrUpdate': 'PUT',
-    'replace': 'PUT',
-    'update': 'PATCH',
-    'delete': 'DELETE',
+    'get': 'get',
+    'getOne': 'get',
+    'create': 'post',
+    'createOrUpdate': 'put',
+    'replace': 'put',
+    'update': 'patch',
+    'delete': 'delete',
 };

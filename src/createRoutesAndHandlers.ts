@@ -1,24 +1,36 @@
 import { Handler } from "express";
 import { Resource } from "./types/resource";
 import { OperationName } from "./types/operation";
-import { Operations, opMethods } from "./const/operations";
+import { HttpMethod, Operations, opMethods } from "./const/operations";
 import { EightySchema } from "./types/schema";
 
 export type RouteHandler = {
-    method: 'get' | 'post' | 'put' | 'patch' | 'delete',
+    method: HttpMethod,
     handler: Handler[],
     route: string,
 }
 
-export const buildRoute = (op: OperationName, resource: Resource) => {
+export const buildRoute = (op: OperationName, resource: Resource): RouteHandler => {
+    const middlewares: Handler[] = [];
     // Resolve authentication middleware
     // Resolve authorization middleware?
     // Resolve op middleware (might need to apply authorization)
+    middlewares.push((req, res) => {
+        return res.status(200).end();
+    })
+
+
+    return {
+        route: `/${resource.name}`,
+        method: opMethods[op],
+        handler: middlewares
+    }
+
 }
 
 export const createRoutes = (resource: Resource): RouteHandler[] => {
     
-    const specifiedOps = Object.keys(resource.operations || [] as string[]);
+    // const specifiedOps = Object.keys(resource.operations || [] as string[]);
 
     const routes = Operations.map(op => buildRoute(op, resource));
 

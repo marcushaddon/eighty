@@ -44,7 +44,7 @@ export const eighty = (opts: EightyOpts): Express => {
     const router = express();
  
     for (const { route, handler, method } of routesAndHandlers) {
-        router[method](route, handler);
+        router[method](route, ...handler);
     }
 
     return router;
