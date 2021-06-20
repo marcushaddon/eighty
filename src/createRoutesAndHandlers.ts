@@ -17,16 +17,14 @@ export const buildRoute = (op: OperationName, resource: Resource): RouteHandler 
     // Resolve op middleware (might need to apply authorization)
     middlewares.push((req, res) => {
         return res.status(200).end();
-    })
-
+    });
 
     return {
         route: `/${resource.name}`,
         method: opMethods[op],
         handler: middlewares
-    }
-
-}
+    };
+};
 
 export const createRoutes = (resource: Resource): RouteHandler[] => {
     
@@ -35,7 +33,7 @@ export const createRoutes = (resource: Resource): RouteHandler[] => {
     const routes = Operations.map(op => buildRoute(op, resource));
 
     return routes;
-}
+};
 
 export const createRoutesAndHandlers = (schema: EightySchema): RouteHandler[] => {
     const resources = (schema.resources || []);
@@ -47,4 +45,4 @@ export const createRoutesAndHandlers = (schema: EightySchema): RouteHandler[] =>
         .reduce((acc, current) => [ ...acc, ...current ]);
 
     return flattened;
-}
+};

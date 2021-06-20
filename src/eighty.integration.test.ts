@@ -20,9 +20,6 @@ describe('defaults', () => {
         const res = await request(router)
             .get("/user")
             .send()
-            .expect(200)
-        console.log(res);
-    //         .expect(200)
-    //         .then(() => done());
+            .expect(200);
     })
 });
