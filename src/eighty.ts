@@ -2,7 +2,7 @@ import * as fs from 'fs';
 import * as yaml from 'yaml';
 import express, { Request, Express, Router, Handler } from 'express';
 import { EightySchema, EightySchemaValidator } from './types/schema';
-import { createRoutesAndHandlers } from './createRoutesAndHandlers';
+import { RouterBuilder } from './createRoutesAndHandlers';
 
 type EightyOpenApiHandler = {
     route: string;
@@ -38,8 +38,10 @@ export const eighty = (opts: EightyOpts): Express => {
     } else {
         throw new Error('One of schema | schemaRaw | schema path is required');
     }
+
+    const routerBuilder = new RouterBuilder(schema);
     
-    const routesAndHandlers = createRoutesAndHandlers(schema);
+    const routesAndHandlers = routerBuilder.createRoutesAndHandlers();
 
     const router = express();
  

@@ -12,6 +12,9 @@ describe('defaults', () => {
             schemaRaw: `
             version: "1.0.0" 
 
+            database:
+                type: postgres
+
             resources:
                 - name: user
             `
