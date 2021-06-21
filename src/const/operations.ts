@@ -9,7 +9,7 @@ export type HttpMethod = (
 );
 
 export const Operations: OperationName[] = [
-    'get',
+    'list',
     'getOne',
     'create',
     'createOrUpdate',
@@ -19,7 +19,7 @@ export const Operations: OperationName[] = [
 ];
 
 export const opMethods: { [ key in OperationName ]: HttpMethod } = {
-    'get': 'get',
+    'list': 'get',
     'getOne': 'get',
     'create': 'post',
     'createOrUpdate': 'put',

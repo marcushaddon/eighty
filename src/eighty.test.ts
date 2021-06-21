@@ -7,17 +7,19 @@ const mockService = {
 
 describe('defaults', () => {
 
+    const testSchema = `
+    version: "1.0.0" 
+
+    database:
+        type: mock
+
+    resources:
+        - name: user
+    `
+
     it('creates public getOne endpoints', async () => {
         const router = eighty({
-            schemaRaw: `
-            version: "1.0.0" 
-
-            database:
-                type: mock
-
-            resources:
-                - name: user
-            `
+            schemaRaw: testSchema
         });
 
         await request(router)
@@ -29,5 +31,7 @@ describe('defaults', () => {
             .get('/user/idontexist')
             .send()
             .expect(404);
-    })
+    });
+
+    
 });

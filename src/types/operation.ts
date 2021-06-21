@@ -1,7 +1,7 @@
 import * as rt from 'runtypes';
 
 export const OperationNameValidator = rt.Union(
-    rt.Literal('get'),
+    rt.Literal('list'),
     rt.Literal('getOne'),
     rt.Literal('create'),
     rt.Literal('createOrUpdate'),

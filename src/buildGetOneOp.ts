@@ -1,5 +1,5 @@
 import { OperationName } from "./types/operation";
-import { IDBClient } from "./db";
+import { IDBClient } from "./db/db";
 import { Handler } from "express";
 
 export const buildGetOneOp = ({
@@ -10,7 +10,6 @@ export const buildGetOneOp = ({
     db: IDBClient,
 }): Handler => {
     const op: Handler = async (req, res, next) => {
-        console.log('GETTTING ONE', resourceName, req.params.id); 
         const id = req.params.id;
 
         let resource: any;

@@ -3,8 +3,8 @@ import { Resource } from "./types/resource";
 import { OperationName } from "./types/operation";
 import { HttpMethod, Operations, opMethods } from "./const/operations";
 import { EightySchema } from "./types/schema";
-import { IDBClient, resolveDbClient } from "./db";
-import { buildGetOneOp } from "./OpBuilder";
+import { IDBClient, resolveDbClient } from "./db/db";
+import { buildGetOneOp } from "./buildGetOneOp";
 
 export type RouteHandler = {
     method: HttpMethod,
@@ -81,6 +81,6 @@ export class RouterBuilder {
 
 // TODO: maybe this should be with ops
 const getRoute = (op: OperationName, resourceName: string): string => {
-    if (op === 'get' || op === 'create') return `/${resourceName}`;
+    if (op === 'list' || op === 'create') return `/${resourceName}`;
     return `/${resourceName}/:id`;
 }
