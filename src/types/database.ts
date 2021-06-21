@@ -5,3 +5,7 @@ export const DatabaseValidator = rt.Record({
 });
 
 export type Database = rt.Static<typeof DatabaseValidator>;
+
+export type EightyRecord = {
+    id: string,
+}
