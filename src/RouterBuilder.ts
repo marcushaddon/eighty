@@ -4,6 +4,7 @@ import { OperationName } from "./types/operation";
 import { HttpMethod, Operations, opMethods } from "./const/operations";
 import { EightySchema } from "./types/schema";
 import { IDBClient, resolveDbClient } from "./db";
+import { buildGetOneOp } from "./OpBuilder";
 
 export type RouteHandler = {
     method: HttpMethod,
@@ -56,14 +57,30 @@ export class RouterBuilder {
         // Resolve authentication middleware
         // Resolve authorization middleware?
         // Resolve op middleware (might need to apply authorization)
-        middlewares.push((req, res) => {
-            return res.status(200).end();
-        });
-    
+        let opMW: Handler;
+        switch (op) {
+            case 'getOne':
+                opMW = buildGetOneOp({
+                    resourceName: resource.name,
+                    db: this.db,
+                });
+                break;
+            default:
+                opMW = (req, res) => console.log(`Unknown op: ${op}`)
+        }
+
+        middlewares.push(opMW);
+
         return {
-            route: `/${resource.name}`,
+            route: getRoute(op, resource.name),
             method: opMethods[op],
             handler: middlewares
         };
     };
+}
+
+// TODO: maybe this should be with ops
+const getRoute = (op: OperationName, resourceName: string): string => {
+    if (op === 'get' || op === 'create') return `/${resourceName}`;
+    return `/${resourceName}/:id`;
 }

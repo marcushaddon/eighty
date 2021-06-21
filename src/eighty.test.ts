@@ -7,22 +7,27 @@ const mockService = {
 
 describe('defaults', () => {
 
-    it('creates default endpoints', async () => {
+    it('creates public getOne endpoints', async () => {
         const router = eighty({
             schemaRaw: `
             version: "1.0.0" 
 
             database:
-                type: postgres
+                type: mock
 
             resources:
                 - name: user
             `
         });
 
-        const res = await request(router)
-            .get("/user")
+        await request(router)
+            .get('/user/a')
             .send()
             .expect(200);
+        
+        await request(router)
+            .get('/user/idontexist')
+            .send()
+            .expect(404);
     })
 });

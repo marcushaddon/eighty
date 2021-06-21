@@ -2,7 +2,7 @@ import * as fs from 'fs';
 import * as yaml from 'yaml';
 import express, { Request, Express, Router, Handler } from 'express';
 import { EightySchema, EightySchemaValidator } from './types/schema';
-import { RouterBuilder } from './createRoutesAndHandlers';
+import { RouterBuilder } from './RouterBuilder';
 
 type EightyOpenApiHandler = {
     route: string;

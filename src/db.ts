@@ -7,7 +7,7 @@ export interface IDBClient {
 }
 
 export const resolveDbClient = (dbConfig: Database): IDBClient => {
-    return { } as IDBClient;
+    return DbClients.get(dbConfig.type)!();
 }
 
 export class PostgresClient implements IDBClient {
@@ -41,14 +41,14 @@ export class MongoDbClient implements IDBClient {
 export class MockDbClient implements IDBClient {
     collections: any = {
         user: {
-            userA: { id: 'a' }
+            a: { id: 'a' }
         }
     }
 
     async getById(resource: string, id: string) {
         const rec = this.collections[resource]?.[id];
         if (!rec) { 
-            throw new NotFoundError
+            throw new NotFoundError();
         }
 
         return rec;
