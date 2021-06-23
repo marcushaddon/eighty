@@ -10,6 +10,7 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@shelf/jest-mongodb": "^1.2.5",
     "@types/express": "^4.17.12",
     "@types/jest": "^26.0.23",
     "@types/mongodb": "^3.6.18",
@@ -27,5 +28,9 @@
     "qs": "^6.10.1",
     "runtypes": "^6.3.0",
     "yaml": "^1.10.2"
+  },
+  "jest": {
+    "globalSetup": "./node_modules/@shelf/jest-mongodb/setup.js",
+    "globalTeardown": "./node_modules/@shelf/jest-mongodb/teardown.js"
   }
 }
