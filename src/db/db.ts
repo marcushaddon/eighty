@@ -3,6 +3,7 @@ import { Database, EightyRecord } from '../types/database';
 import { MockDbClient } from './mockdb';
 import { PostgresClient } from './postgres';
 import { MongoDbClient } from './mongodb';
+import { PaginatedResponse } from '../types/api';
 
 export type ListOps = {
     resource: string,
@@ -14,7 +15,7 @@ export type ListOps = {
 export interface IDBClient {
     connect(): Promise<void>;
     disconnect(): Promise<void>;
-    list(opts: ListOps): Promise<EightyRecord[]>;
+    list(opts: ListOps): Promise<PaginatedResponse>;
     getById(resource: string, id: string): Promise<EightyRecord>;
     create(resourceName: string, resource: any): Promise<EightyRecord>;
 }

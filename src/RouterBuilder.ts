@@ -80,7 +80,7 @@ export class RouterBuilder {
 
 // TODO: maybe this should be with ops
 const getRoute = (op: OperationName, resourceName: string): string => {
-    if (op === 'list' || op === 'create') return `/${resourceName}`;
+    if (op === 'list' || op === 'create') return `/${resourceName}s`;
     return `/${resourceName}s/:id`;
 }
 
@@ -91,7 +91,6 @@ const getOpBuilder = (op: OperationName)=> {
     const builders: { [ k: string ]: any } = {
         list: buildListOp,
         getOne: buildGetOneOp,
-        
     };
     if (!(op in builders)) console.log(`Unknown op: ${op}`);
     return builders[op as string] || noOpBuilder;

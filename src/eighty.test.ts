@@ -60,24 +60,21 @@ describe('defaults', () => {
                 .expect(404);
         });
 
-        it.skip(`${db}: creates public list endpoint`, async () => {
-            const router = await eighty({
-                schemaRaw: testSchema,
-            });
-
-            await request(router)
-                .get('/user')
+        it(`${db}: creates public list endpoint with pagination`, async () => {
+            await request(uut)
+                .get('/users')
                 .send()
                 .expect(200)
                 .expect(res => {
-                    expect(res.body.results.length).toEqual(4);
+                    console.log(res.body, 'REXSS')
+                    expect(res.body.results.length).toEqual(fixtures.users.length);
                 })
             
-            await request(router)
-                .get('/user?count=2')
-                .send()
-                .expect(200)
-                .expect(res => expect(res.body.results.length).toEqual(2));
+            // await request(uut)
+            //     .get('/users?count=2')
+            //     .send()
+            //     .expect(200)
+            //     .expect(res => expect(res.body.results.length).toEqual(2));
         });
 
         it.skip(`${db}: creates public create endpoint`, async () => {

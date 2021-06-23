@@ -23,7 +23,7 @@ export const buildListOp = ({
         const count = countParam && parseInt(countParam as string) || 20;
         const skip = skipParam && parseInt(skipParam as string) || 0;
 
-        const results = await db.list({
+        const result = await db.list({
             resource: resourceName,
             count,
             skip,
@@ -32,7 +32,7 @@ export const buildListOp = ({
 
         if ((req as any).authorizer) {
             try {
-                results.forEach(res => (req as any).authorizer(res));
+                result.results.forEach(res => (req as any).authorizer(res));
             } catch (e) {
                 return res
                     .status(e.status)
@@ -43,8 +43,6 @@ export const buildListOp = ({
 
         return res
             .status(200)
-            .json({
-                results
-            }).end();
+            .json(result).end();
     };
 }

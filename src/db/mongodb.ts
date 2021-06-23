@@ -2,6 +2,7 @@ import { MongoClient, Db, InsertOneWriteOpResult, ObjectId } from 'mongodb';
 import { IDBClient, ListOps } from "./db";
 import { EightyRecord } from '../types/database';
 import { NotFoundError } from '../errors';
+import { PaginatedResponse } from '../types/api';
 
 export class MongoDbClient implements IDBClient {
     private readonly connString?: string;
@@ -29,10 +30,16 @@ export class MongoDbClient implements IDBClient {
         skip = 0,
         count = 20,
         filters
-    }: ListOps): Promise<EightyRecord[]> {
-        throw new Error('Not implemented');
+    }: ListOps): Promise<PaginatedResponse> {
+        const res = await this.db?.collection(resource+'s').find();
+        const all = await res?.toArray();
+        const transformed = (all || []).map(r => ({ ...r, id: r._id }));
 
-        return [];
+        return {
+            total: 1000,
+            skipped: 34,
+            results: transformed
+        }
     }
 
     async getById(resource: string, id: string) {
