@@ -26,7 +26,7 @@ const parseSchema = (contents: string): EightySchema => {
     return EightySchemaValidator.check(parsed);
 };
 
-export const eighty = async (opts: EightyOpts): Promise<Express> => {
+export const eighty = (opts: EightyOpts) => {
     let schema: EightySchema;
     if (opts.schema) {
         schema = opts.schema;
@@ -41,7 +41,11 @@ export const eighty = async (opts: EightyOpts): Promise<Express> => {
 
     const routerBuilder = new RouterBuilder(schema);
     
-    const routesAndHandlers = await routerBuilder.createRoutesAndHandlers();
+    const {
+        routesAndHandlers,
+        init,
+        tearDown,
+    } = routerBuilder.createRoutesAndHandlers();
 
     const router = express();
  
@@ -49,5 +53,5 @@ export const eighty = async (opts: EightyOpts): Promise<Express> => {
         router[method](route, ...handler);
     }
 
-    return router;
+    return { init, tearDown, router };
 };

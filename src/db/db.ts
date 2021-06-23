@@ -13,6 +13,7 @@ export type ListOps = {
 
 export interface IDBClient {
     connect(): Promise<void>;
+    disconnect(): Promise<void>;
     list(opts: ListOps): Promise<EightyRecord[]>;
     getById(resource: string, id: string): Promise<EightyRecord>;
     create(resourceName: string, resource: any): Promise<EightyRecord>;

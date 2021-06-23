@@ -1,8 +1,8 @@
 import * as process from 'process';
+import { Express } from 'express';
 import request from 'supertest';
 import { eighty } from './eighty';
-import { MongoDbClient } from './db';
-import { users } from './fixtures'; 
+import { buildMongoFixtures, cleanupMongoFixtures } from './fixtures'; 
 import { MongoClient, Db } from 'mongodb';
 
 const mockService = {
@@ -12,18 +12,27 @@ const mockService = {
 describe('defaults', () => {
 
     ['mongodb'].forEach(db => {
-        let connection: MongoClient;
-        let mongo: Db;
-        let mockUsers: any[];
+        let fixtures: any;
+        let uut: Express;
+        let tearDownEighty: () => Promise<void>;
+
         beforeAll(async () => {
-            connection = await MongoClient.connect(process.env.MONGODB_CONNECTION_STRING!);
-            mongo = connection.db('local');
-            // TODO: Create fixtures
+            fixtures = await buildMongoFixtures();
+            const { router, init, tearDown } = eighty({
+                schemaRaw: testSchema
+            });
+
+            uut = router;
+            tearDownEighty = tearDown;
+
+            await init();
         });
 
         afterAll(async () => {
-            await connection.close();
+            await tearDownEighty();
+            await cleanupMongoFixtures();
         });
+
     
         const testSchema = `
         version: "1.0.0" 
@@ -36,21 +45,19 @@ describe('defaults', () => {
             - name: user
         `;
 
-        // it('temp', () => expect(5).toEqual(5))
         it(`${db}: creates public getOne endpoints`, async () => {
-            const router = await eighty({
-                schemaRaw: testSchema
-            });
+            const existingId = fixtures.users[0]._id;
+            const nonExistantId = '60d26b6c8ff5dd8ca441d514';
 
-            // await request(router)
-            //     .get(`/user/${mockUsers[0].id}`)
-            //     .send()
-            //     .expect(200);
+            await request(uut)
+                .get(`/users/${existingId}`)
+                .send()
+                .expect(200);
             
-            // await request(router)
-            //     .get('/user/idontexist')
-            //     .send()
-            //     .expect(404);
+            await request(uut)
+                .get(`/users/${nonExistantId}`) // Doesnt exist
+                .send()
+                .expect(404);
         });
 
         it.skip(`${db}: creates public list endpoint`, async () => {

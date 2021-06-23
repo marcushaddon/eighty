@@ -2,9 +2,8 @@
 Progressive framework for declaratively building boilerplate CRUD JSON APIs.
 
 ## TODO: 
-1. Create postgres/mongo docker image for integration testing
-2. Create fixtures
-3. Set up tests to run against mock, postgres, and mongo based on flags?
+2. Figure out how to make sure tests dont overwrite real DB
+3. Make routes and resource names just match
 4. Implement list filter parsing overall, translation for each client
     - need to parse query filters (including exists, regex, lt, gte, exists) (look at `qs`)
     - need to translate all filters to mongo query fields and SQL clauses

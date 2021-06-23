@@ -1,31 +1,27 @@
-import { MongoClient, Db, InsertOneWriteOpResult } from 'mongodb';
+import { MongoClient, Db, InsertOneWriteOpResult, ObjectId } from 'mongodb';
 import { IDBClient, ListOps } from "./db";
 import { EightyRecord } from '../types/database';
 import { NotFoundError } from '../errors';
 
 export class MongoDbClient implements IDBClient {
+    private readonly connString?: string;
     private readonly dbName: string;
     private  db?: Db;
-    private mongo: MongoClient;
+    private mongo?: MongoClient;
 
     constructor() {
-        const connString = process.env['MONGODB_CONNECTION_STRING'];
+        this.connString = process.env['MONGODB_CONNECTION_STRING'];
         this.dbName = process.env['MONGODB_DB_NAME'] || 'local';
-        if (!connString) throw new Error('MongoDb was specified as database, but no connection string was found in environment (MONGODB_CONNECTION_STRING');
-        // TODO: Connect to mongo
-        this.mongo = new MongoClient(connString);
+        if (!this.connString) throw new Error('MongoDb was specified as database, but no connection string was found in environment (MONGODB_CONNECTION_STRING');
     }
 
     async connect(): Promise<void> {
-        console.log('Connecting to mongo!');
-        this.mongo = await this.mongo.connect();
-        this.db = this.mongo.db(this.dbName);
-        console.log('Mongo connected!!!');
+        this.mongo = await MongoClient.connect(process.env.MONGODB_CONNECTION_STRING!);
+        this.db = await this.mongo.db(this.dbName);
     }
 
     async disconnect(): Promise<void> {
-        console.log('Mongo disconnecting!')
-        return await this.mongo.close(true);
+        await this.mongo?.close(true);
     }
 
     async list({
@@ -40,8 +36,15 @@ export class MongoDbClient implements IDBClient {
     }
 
     async getById(resource: string, id: string) {
-        console.log('THIS', this);
-        return this.db!.collection(resource).findOne({ id });
+        const res = await this.db!
+            .collection(resource + 's')
+            .findOne({ _id: new ObjectId(id) }); // TODO: may not be able to assume valid ObjectId?
+
+        if (!res) throw new NotFoundError(
+            `${resource} with id ${id} not found`
+        );
+
+        return res;
     }
 
     async create(resourceName: string, resource: any): Promise<EightyRecord> {

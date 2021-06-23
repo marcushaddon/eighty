@@ -19,13 +19,12 @@ export class RouterBuilder {
     constructor(private readonly schema: EightySchema) {
         this.db = resolveDbClient(schema.database);
         // TODO: Surface async init method
-        this.db.connect();
     }
 
     /**
      * Creates routes and handlers to be registered on an Express router.
      */
-    async createRoutesAndHandlers(): Promise<RouteHandler[]> {
+    createRoutesAndHandlers() {
         const resources = (this.schema.resources || []);
     
         const resourceRoutes = resources
@@ -34,9 +33,10 @@ export class RouterBuilder {
         const flattened = resourceRoutes
             .reduce((acc, current) => [ ...acc, ...current ]);
         
-        await this.db.connect();
+        const init = this.db.connect.bind(this.db);
+        const tearDown = this.db.disconnect.bind(this.db);
     
-        return flattened;
+        return { routesAndHandlers: flattened, init, tearDown };
     };
 
     /**
@@ -81,7 +81,7 @@ export class RouterBuilder {
 // TODO: maybe this should be with ops
 const getRoute = (op: OperationName, resourceName: string): string => {
     if (op === 'list' || op === 'create') return `/${resourceName}`;
-    return `/${resourceName}/:id`;
+    return `/${resourceName}s/:id`;
 }
 
 const noOpBuilder = (): Handler => (req, res) => console.log(`Unknown op}`);
