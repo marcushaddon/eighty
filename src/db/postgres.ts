@@ -6,13 +6,17 @@ export class PostgresClient implements IDBClient {
     constructor() {
         const connString = process.env['POSTGRES_CONNECTION_STRING'];
         if (!connString) throw new Error('Postgres was specified as database, but no connection string was found in environment (POSTGRES_CONNECTION_STRING');
-        // TODO: Connect to postgres
+        // TODO: Connect to mongo?
+    }
+
+    async connect() {
+        throw new Error('Not implemented');
     }
 
     async list({
         resource,
-        page = 1,
-        pageSize = 20
+        skip = 1,
+        count = 20
     }: ListOps): Promise<EightyRecord[]> {
         throw new Error('Not implemented');
 
@@ -23,5 +27,11 @@ export class PostgresClient implements IDBClient {
         throw new Error('Not implemented');
         
         return { id: 'todo' } as EightyRecord;
+    }
+
+    async create(resourceName: string, resource: any): Promise<EightyRecord> {
+        throw new Error('Not implemented');
+
+        return { id: 'todo' };
     }
 }

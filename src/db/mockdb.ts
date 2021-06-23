@@ -12,13 +12,15 @@ export class MockDbClient implements IDBClient {
         }
     }
 
+    async connect() {}
+
     async list({
         resource,
-        page = 1,
-        pageSize = 20,
+        skip = 0,
+        count = 20,
         filters,
     }: ListOps): Promise<EightyRecord[]> {
-        const res = Object.values(this.collections[resource]);
+        const res = Object.values(this.collections[resource]).slice(skip, skip + count);
 
         return res as EightyRecord[];
     }
@@ -30,5 +32,11 @@ export class MockDbClient implements IDBClient {
         }
 
         return rec;
+    }
+
+    async create(resourceName: string, resource: any) {
+        throw new Error('Not implemented');
+
+        return { id: 'todo' };
     }
 }

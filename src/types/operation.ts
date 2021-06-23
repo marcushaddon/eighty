@@ -4,7 +4,7 @@ export const OperationNameValidator = rt.Union(
     rt.Literal('list'),
     rt.Literal('getOne'),
     rt.Literal('create'),
-    rt.Literal('createOrUpdate'),
+    rt.Literal('createOrReplace'),
     rt.Literal('replace'),
     rt.Literal('update'),
     rt.Literal('delete'),

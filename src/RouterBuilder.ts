@@ -4,7 +4,8 @@ import { OperationName } from "./types/operation";
 import { HttpMethod, Operations, opMethods } from "./const/operations";
 import { EightySchema } from "./types/schema";
 import { IDBClient, resolveDbClient } from "./db/db";
-import { buildGetOneOp } from "./buildGetOneOp";
+import { buildGetOneOp } from "./ops/buildGetOneOp";
+import { buildListOp } from "./ops/buildListOp";
 
 export type RouteHandler = {
     method: HttpMethod,
@@ -17,12 +18,14 @@ export class RouterBuilder {
 
     constructor(private readonly schema: EightySchema) {
         this.db = resolveDbClient(schema.database);
+        // TODO: Surface async init method
+        this.db.connect();
     }
 
     /**
      * Creates routes and handlers to be registered on an Express router.
      */
-    createRoutesAndHandlers(): RouteHandler[] {
+    async createRoutesAndHandlers(): Promise<RouteHandler[]> {
         const resources = (this.schema.resources || []);
     
         const resourceRoutes = resources
@@ -30,6 +33,8 @@ export class RouterBuilder {
     
         const flattened = resourceRoutes
             .reduce((acc, current) => [ ...acc, ...current ]);
+        
+        await this.db.connect();
     
         return flattened;
     };
@@ -57,17 +62,11 @@ export class RouterBuilder {
         // Resolve authentication middleware
         // Resolve authorization middleware?
         // Resolve op middleware (might need to apply authorization)
-        let opMW: Handler;
-        switch (op) {
-            case 'getOne':
-                opMW = buildGetOneOp({
-                    resourceName: resource.name,
-                    db: this.db,
-                });
-                break;
-            default:
-                opMW = (req, res) => console.log(`Unknown op: ${op}`)
-        }
+        const opMW: Handler = getOpBuilder(op)({
+            resourceName: resource.name,
+            db: this.db,
+        });
+        
 
         middlewares.push(opMW);
 
@@ -83,4 +82,17 @@ export class RouterBuilder {
 const getRoute = (op: OperationName, resourceName: string): string => {
     if (op === 'list' || op === 'create') return `/${resourceName}`;
     return `/${resourceName}/:id`;
+}
+
+const noOpBuilder = (): Handler => (req, res) => console.log(`Unknown op}`);
+
+
+const getOpBuilder = (op: OperationName)=> {
+    const builders: { [ k: string ]: any } = {
+        list: buildListOp,
+        getOne: buildGetOneOp,
+        
+    };
+    if (!(op in builders)) console.log(`Unknown op: ${op}`);
+    return builders[op as string] || noOpBuilder;
 }

@@ -1,5 +1,4 @@
-import { OperationName } from "./types/operation";
-import { IDBClient } from "./db/db";
+import { IDBClient } from "../db/db";
 import { Handler } from "express";
 
 export const buildGetOneOp = ({
@@ -18,7 +17,7 @@ export const buildGetOneOp = ({
         } catch (e) {
             console.error('NOT FOUND', e);
             return res
-                .status(e.status)
+                .status(e.status || 500)
                 .json({ message: e.message })
                 .end();
         }

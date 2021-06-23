@@ -6,14 +6,16 @@ import { MongoDbClient } from './mongodb';
 
 export type ListOps = {
     resource: string,
-    page?: number | undefined,
-    pageSize?: number | undefined,
+    count?: number | undefined,
+    skip?: number | undefined,
     filters?: { }
 }
 
 export interface IDBClient {
+    connect(): Promise<void>;
     list(opts: ListOps): Promise<EightyRecord[]>;
     getById(resource: string, id: string): Promise<EightyRecord>;
+    create(resourceName: string, resource: any): Promise<EightyRecord>;
 }
 
 export const resolveDbClient = (dbConfig: Database): IDBClient => {
@@ -21,8 +23,8 @@ export const resolveDbClient = (dbConfig: Database): IDBClient => {
 }
 
 export const DbClients = new Map<string, () => IDBClient>([
-    [ 'mock', () => new MockDbClient() ],
-    [ 'postgres', () => new PostgresClient() ],
+    // [ 'mock', () => new MockDbClient() ],
+    // [ 'postgres', () => new PostgresClient() ],
     [ 'mongodb', () => new MongoDbClient() ],
 ]);
 

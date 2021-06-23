@@ -3,8 +3,9 @@ import * as rt from 'runtypes';
 export const DatabaseValidator = rt.Record({
     type: rt.Union(
         rt.Literal('mock'),
-        rt.Literal('postgres'),
+        rt.Literal('mongodb'),
     ),
+    name: rt.String,
 });
 
 export type Database = rt.Static<typeof DatabaseValidator>;
