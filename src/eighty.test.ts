@@ -4,6 +4,7 @@ import request from 'supertest';
 import { eighty } from './eighty';
 import { buildMongoFixtures, cleanupMongoFixtures } from './fixtures'; 
 import { MongoClient, Db } from 'mongodb';
+import { PaginatedResponse } from './types/api';
 
 const mockService = {
     getOne() { return [{ name: 'test-user' }]}
@@ -39,7 +40,6 @@ describe('defaults', () => {
 
         database:
             type: ${db}
-            name: test
 
         resources:
             - name: user
@@ -55,7 +55,7 @@ describe('defaults', () => {
                 .expect(200);
             
             await request(uut)
-                .get(`/users/${nonExistantId}`) // Doesnt exist
+                .get(`/users/${nonExistantId}`)
                 .send()
                 .expect(404);
         });
@@ -66,15 +66,28 @@ describe('defaults', () => {
                 .send()
                 .expect(200)
                 .expect(res => {
-                    console.log(res.body, 'REXSS')
                     expect(res.body.results.length).toEqual(fixtures.users.length);
                 })
             
-            // await request(uut)
-            //     .get('/users?count=2')
-            //     .send()
-            //     .expect(200)
-            //     .expect(res => expect(res.body.results.length).toEqual(2));
+            let firstResponse: PaginatedResponse;
+            let secondResponse: PaginatedResponse;
+            
+            // TODO: Make sure different results are returned
+            await request(uut)
+                .get('/users?count=2')
+                .send()
+                .expect(200)
+                .expect(async res1 => {
+                    expect(res1.body.results.length).toEqual(2);
+                });
+
+            await request(uut)
+                .get('/users?skip=2')
+                .send()
+                .expect(200)
+                .expect(res2 => {
+                    expect(res2.body.results.length).toEqual(3)
+                });
         });
 
         it.skip(`${db}: creates public create endpoint`, async () => {

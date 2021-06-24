@@ -31,7 +31,12 @@ export class MongoDbClient implements IDBClient {
         count = 20,
         filters
     }: ListOps): Promise<PaginatedResponse> {
-        const res = await this.db?.collection(resource+'s').find();
+        const res = await this.db
+            ?.collection(resource+'s')
+            .find()
+            .skip(skip)
+            .limit(count);
+    
         const all = await res?.toArray();
         const transformed = (all || []).map(r => ({ ...r, id: r._id }));
 

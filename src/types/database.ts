@@ -5,7 +5,6 @@ export const DatabaseValidator = rt.Record({
         rt.Literal('mock'),
         rt.Literal('mongodb'),
     ),
-    name: rt.String,
 });
 
 export type Database = rt.Static<typeof DatabaseValidator>;
