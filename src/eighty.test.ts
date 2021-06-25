@@ -1,9 +1,7 @@
-import * as process from 'process';
 import { Express } from 'express';
 import request from 'supertest';
 import { eighty } from './eighty';
 import { buildMongoFixtures, cleanupMongoFixtures } from './fixtures'; 
-import { MongoClient, Db } from 'mongodb';
 import { PaginatedResponse } from './types/api';
 
 const mockService = {
@@ -11,7 +9,6 @@ const mockService = {
 }
 
 describe('defaults', () => {
-
     ['mongodb'].forEach(db => {
         let fixtures: any;
         let uut: Express;
@@ -43,6 +40,7 @@ describe('defaults', () => {
 
         resources:
             - name: user
+              schemaPath: ./src/fixtures/schemas/user.yaml
         `;
 
         it(`${db}: creates public getOne endpoints`, async () => {
@@ -72,7 +70,7 @@ describe('defaults', () => {
             let firstResponse: PaginatedResponse;
             let secondResponse: PaginatedResponse;
             
-            // TODO: Make sure different results are returned
+            // TODO: Check pagination values!
             await request(uut)
                 .get('/users?count=2')
                 .send()
@@ -88,6 +86,24 @@ describe('defaults', () => {
                 .expect(res2 => {
                     expect(res2.body.results.length).toEqual(3)
                 });
+            
+            await request(uut)
+                .get('/users?age[gt]=40')
+                .send()
+                .expect(200)
+                .expect(res => {
+                    const filtered = res.body.results
+                        .filter((r: { age: number }) => r.age > 40);
+                    expect(filtered.length).toEqual(res.body.results.length);
+                })
+            
+            await request(uut)
+                .get('/users?age[gt]=20&score[lt]=200')
+                .send()
+                .expect(200)
+                .expect(res => {
+                    expect(res.body.results.length).toEqual(1);
+                })
         });
 
         it.skip(`${db}: creates public create endpoint`, async () => {

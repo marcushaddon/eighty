@@ -6,3 +6,12 @@ export class NotFoundError extends Error {
         this.message = message;
     }
 }
+
+export class BadRequestError extends Error {
+    status = 400;
+    message = 'Bad request';
+    constructor(message = 'Bad request') {
+        super();
+        this.message = message;
+    }
+}

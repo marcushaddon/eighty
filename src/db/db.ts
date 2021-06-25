@@ -4,9 +4,10 @@ import { MockDbClient } from './mockdb';
 import { PostgresClient } from './postgres';
 import { MongoDbClient } from './mongodb';
 import { PaginatedResponse } from '../types/api';
+import { Resource } from '../types/resource';
 
 export type ListOps = {
-    resource: string,
+    resource: Resource,
     count?: number | undefined,
     skip?: number | undefined,
     filters?: { }

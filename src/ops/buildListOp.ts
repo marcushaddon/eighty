@@ -1,6 +1,7 @@
-import { SSL_OP_SSLEAY_080_CLIENT_DH_BUG } from 'constants';
 import { Handler } from 'express';
 import { IDBClient } from '../db';
+import { Resource } from '../types/resource';
+import { ValidatorProvider } from '../ValidatorProvider';
 
 const filterPageFields = (fields: any) => {
     delete fields['count'];
@@ -10,21 +11,23 @@ const filterPageFields = (fields: any) => {
 }
 
 export const buildListOp = ({
-    resourceName,
+    resource,
     db,
 }: {
-    resourceName: string,
+    resource: Resource,
     db: IDBClient,
 }): Handler => {
     return async (req, res, next) => {
         const queryParams = req.query;
         const { count: countParam, skip: skipParam } = queryParams;
+
         const filters = filterPageFields(queryParams);
+
         const count = countParam && parseInt(countParam as string) || 20;
         const skip = skipParam && parseInt(skipParam as string) || 0;
 
         const result = await db.list({
-            resource: resourceName,
+            resource: resource.name,
             count,
             skip,
             filters,

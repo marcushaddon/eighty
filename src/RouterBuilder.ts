@@ -1,11 +1,15 @@
 import { Handler } from "express";
+import { ValidationError } from "jsonschema";
 import { Resource } from "./types/resource";
 import { OperationName } from "./types/operation";
 import { HttpMethod, Operations, opMethods } from "./const/operations";
 import { EightySchema } from "./types/schema";
 import { IDBClient, resolveDbClient } from "./db/db";
+import { loadSchema } from "./buildResourceSchemas";
 import { buildGetOneOp } from "./ops/buildGetOneOp";
 import { buildListOp } from "./ops/buildListOp";
+import { ValidatorProvider } from "./ValidatorProvider";
+
 
 export type RouteHandler = {
     method: HttpMethod,
@@ -26,6 +30,15 @@ export class RouterBuilder {
      */
     createRoutesAndHandlers() {
         const resources = (this.schema.resources || []);
+
+        for (const resource of resources) {
+            if (!resource.schemaPath) continue;
+            
+            const validator = loadSchema(resource);
+            if (!validator) continue;
+    
+            ValidatorProvider.register(resource.schemaPath, validator);
+        }
     
         const resourceRoutes = resources
             .map(resource => this.createRoutes(resource));
@@ -63,7 +76,7 @@ export class RouterBuilder {
         // Resolve authorization middleware?
         // Resolve op middleware (might need to apply authorization)
         const opMW: Handler = getOpBuilder(op)({
-            resourceName: resource.name,
+            resource,
             db: this.db,
         });
         
@@ -86,12 +99,11 @@ const getRoute = (op: OperationName, resourceName: string): string => {
 
 const noOpBuilder = (): Handler => (req, res) => console.log(`Unknown op}`);
 
-
 const getOpBuilder = (op: OperationName)=> {
     const builders: { [ k: string ]: any } = {
         list: buildListOp,
         getOne: buildGetOneOp,
     };
-    if (!(op in builders)) console.log(`Unknown op: ${op}`);
+
     return builders[op as string] || noOpBuilder;
 }

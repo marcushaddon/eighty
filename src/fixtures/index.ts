@@ -4,19 +4,29 @@ import { Db, MongoClient } from "mongodb";
 
 export const users = [
     {
-        name: "a"
+        name: "a",
+        age: 10,
+        score: 20
     },
     {
-        name: "b"
+        name: "b",
+        age: 20,
+        score: 20
     },
     {
-        name: "c"
+        name: "c",
+        age: 30,
+        score: 100
     },
     {
-        name: "d"
+        name: "d",
+        age: 40,
+        score: 200
     },
     {
-        name: "e"
+        name: "e",
+        age: 50,
+        score:3100
     },
 ];
 

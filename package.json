@@ -24,6 +24,7 @@
   },
   "dependencies": {
     "express": "^4.17.1",
+    "jsonschema": "^1.4.0",
     "mongodb": "^3.6.9",
     "qs": "^6.10.1",
     "runtypes": "^6.3.0",
