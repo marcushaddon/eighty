@@ -1,21 +1,22 @@
 import { IDBClient } from "../db/db";
 import { Handler } from "express";
+import { Resource } from "../types/resource";
 
 export const buildGetOneOp = ({
-    resourceName,
+    resource,
     db
 }: {
-    resourceName: string,
+    resource: Resource,
     db: IDBClient,
 }): Handler => {
     const op: Handler = async (req, res, next) => {
         const id = req.params.id;
 
-        let resource: any;
+        let result: any;
         try {
-            resource = await db.getById(resourceName, id);
+            result = await db.getById(resource.name, id);
         } catch (e) {
-            console.error('NOT FOUND', e);
+            console.error('NOT FOUND', resource.name, e);
             return res
                 .status(e.status || 500)
                 .json({ message: e.message })

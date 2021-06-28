@@ -8,6 +8,7 @@ import { IDBClient, resolveDbClient } from "./db/db";
 import { loadSchema } from "./buildResourceSchemas";
 import { buildGetOneOp } from "./ops/buildGetOneOp";
 import { buildListOp } from "./ops/buildListOp";
+import { OpBuilder } from "./ops";
 import { ValidatorProvider } from "./ValidatorProvider";
 
 
@@ -75,11 +76,12 @@ export class RouterBuilder {
         // Resolve authentication middleware
         // Resolve authorization middleware?
         // Resolve op middleware (might need to apply authorization)
-        const opMW: Handler = getOpBuilder(op)({
+        const opBuilder = getOpBuilder(op);
+        
+        const opMW: Handler = opBuilder({
             resource,
             db: this.db,
         });
-        
 
         middlewares.push(opMW);
 
@@ -99,11 +101,11 @@ const getRoute = (op: OperationName, resourceName: string): string => {
 
 const noOpBuilder = (): Handler => (req, res) => console.log(`Unknown op}`);
 
-const getOpBuilder = (op: OperationName)=> {
+const getOpBuilder = (op: OperationName): OpBuilder => {
     const builders: { [ k: string ]: any } = {
         list: buildListOp,
         getOne: buildGetOneOp,
     };
 
     return builders[op as string] || noOpBuilder;
-}
+};

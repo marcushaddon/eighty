@@ -1,4 +1,5 @@
 import { Handler } from 'express';
+import { OpBuilder } from '.';
 import { IDBClient } from '../db';
 import { Resource } from '../types/resource';
 import { ValidatorProvider } from '../ValidatorProvider';
@@ -10,7 +11,7 @@ const filterPageFields = (fields: any) => {
     return fields;
 }
 
-export const buildListOp = ({
+export const buildListOp: OpBuilder = ({
     resource,
     db,
 }: {
@@ -26,12 +27,14 @@ export const buildListOp = ({
         const count = countParam && parseInt(countParam as string) || 20;
         const skip = skipParam && parseInt(skipParam as string) || 0;
 
-        const result = await db.list({
-            resource: resource.name,
+        const params = {
+            resource,
             count,
             skip,
             filters,
-        });
+        };
+
+        const result = await db.list(params);
 
         if ((req as any).authorizer) {
             try {

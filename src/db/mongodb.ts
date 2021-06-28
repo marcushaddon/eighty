@@ -5,7 +5,6 @@ import { correctTypes } from "../validation";
 import { EightyRecord } from '../types/database';
 import { NotFoundError, BadRequestError } from '../errors';
 import { PaginatedResponse } from '../types/api';
-import { OperationNameValidator } from '../types/operation';
 import { ValidatorProvider } from '../ValidatorProvider';
 
 export class MongoDbClient implements IDBClient {
@@ -15,13 +14,13 @@ export class MongoDbClient implements IDBClient {
     private mongo?: MongoClient;
 
     constructor() {
-        this.connString = process.env['MONGODB_CONNECTION_STRING'];
+        this.connString = process.env['MONGO_URL'];
         this.dbName = process.env['MONGODB_DB_NAME'] || 'local';
-        if (!this.connString) throw new Error('MongoDb was specified as database, but no connection string was found in environment (MONGODB_CONNECTION_STRING');
+        if (!this.connString) throw new Error('MongoDb was specified as database, but no connection string was found in environment (MONGO_URL)');
     }
 
     async connect(): Promise<void> {
-        this.mongo = await MongoClient.connect(process.env.MONGODB_CONNECTION_STRING!);
+        this.mongo = await MongoClient.connect(process.env.MONGO_URL!);
         this.db = await this.mongo.db(this.dbName);
     }
 
@@ -38,12 +37,13 @@ export class MongoDbClient implements IDBClient {
         let filtersWithCorrectTypes = filters;
         const resourceSchema = ValidatorProvider.getValidator(resource);
         if (resourceSchema) {
-            filtersWithCorrectTypes = correctTypes(filters, resourceSchema);
+            filtersWithCorrectTypes = correctTypes(filters, resourceSchema, resource.name);
         }
         const translatedFilters = translateFilters(filters);
+        console.log(translatedFilters, 'TRANSFLATEDD FLTIESHBER');
         const res = await this.db
-            ?.collection(resource+'s')
-            .find(translatedFilters)
+            ?.collection(resource.name + 's')
+            .find()
             .skip(skip)
             .limit(count);
     
@@ -58,6 +58,8 @@ export class MongoDbClient implements IDBClient {
     }
 
     async getById(resource: string, id: string) {
+        const allEm = await this.db!.collection('users').find().toArray();
+        console.log(allEm, 'ALL EM');
         const res = await this.db!
             .collection(resource + 's')
             .findOne({ _id: new ObjectId(id) }); // TODO: may not be able to assume valid ObjectId?

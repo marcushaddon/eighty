@@ -20,7 +20,7 @@ export class MockDbClient implements IDBClient {
         count = 20,
         filters,
     }: ListOps): Promise<EightyRecord[]> {
-        const res = Object.values(this.collections[resource]).slice(skip, skip + count);
+        const res = Object.values(this.collections[resource.name]).slice(skip, skip + count);
 
         return res as EightyRecord[];
     }
