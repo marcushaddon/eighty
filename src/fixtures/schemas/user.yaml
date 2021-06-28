@@ -6,3 +6,10 @@ properties:
   age:
     type: Integer
     required: true
+  score:
+    type: Integer
+  config:
+    type: object
+    properties:
+      nickname:
+        type: string

@@ -6,27 +6,42 @@ export const users = [
     {
         name: "a",
         age: 10,
-        score: 20
+        score: 20,
+        config: {
+            nickname: 'aNickname'
+        }
     },
     {
         name: "b",
         age: 20,
-        score: 20
+        score: 20,
+        config: {
+            nickname: 'bNickname'
+        }
     },
     {
         name: "c",
         age: 30,
-        score: 100
+        score: 100,
+        config: {
+            nickname: 'cNickname'
+        }
     },
     {
         name: "d",
         age: 40,
-        score: 200
+        score: 200,
+        config: {
+            nickname: 'dNickname'
+        }
     },
     {
         name: "e",
         age: 50,
-        score:3100
+        score:3100,
+        config: {
+            nickname: 'eNickname'
+        }
     },
 ];
 

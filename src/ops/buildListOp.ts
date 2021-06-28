@@ -1,6 +1,7 @@
 import { Handler } from 'express';
 import { OpBuilder } from '.';
 import { IDBClient } from '../db';
+import { PaginatedResponse } from '../types/api';
 import { Resource } from '../types/resource';
 import { ValidatorProvider } from '../ValidatorProvider';
 
@@ -34,7 +35,16 @@ export const buildListOp: OpBuilder = ({
             filters,
         };
 
-        const result = await db.list(params);
+        let result: PaginatedResponse;
+        try {
+            result = await db.list(params);
+        } catch (e) {
+            return res
+                .status(e.status)
+                .json({ message: e.message })
+                .end();
+        }
+        
 
         if ((req as any).authorizer) {
             try {

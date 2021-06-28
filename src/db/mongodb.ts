@@ -39,11 +39,11 @@ export class MongoDbClient implements IDBClient {
         if (resourceSchema) {
             filtersWithCorrectTypes = correctTypes(filters, resourceSchema, resource.name);
         }
-        const translatedFilters = translateFilters(filters);
-        console.log(translatedFilters, 'TRANSFLATEDD FLTIESHBER');
+        const translatedFilters = translateFilters(filtersWithCorrectTypes);
+
         const res = await this.db
             ?.collection(resource.name + 's')
-            .find()
+            .find(translatedFilters)
             .skip(skip)
             .limit(count);
     
@@ -51,15 +51,14 @@ export class MongoDbClient implements IDBClient {
         const transformed = (all || []).map(r => ({ ...r, id: r._id }));
 
         return {
-            total: 1000,
-            skipped: 34,
+            total: transformed.length,
+            skipped: skip,
             results: transformed
         }
     }
 
     async getById(resource: string, id: string) {
         const allEm = await this.db!.collection('users').find().toArray();
-        console.log(allEm, 'ALL EM');
         const res = await this.db!
             .collection(resource + 's')
             .findOne({ _id: new ObjectId(id) }); // TODO: may not be able to assume valid ObjectId?
@@ -94,9 +93,7 @@ export const translateFilters = (parsedQueryString: ParsedQs) => {
     // Extract filters by fields
     const keyVals = Object.entries(parsedQueryString);
     
-    for (let [ key, val ] of keyVals) {
-        // TODO: if type/validation info for resource available
-        // convert val to appropriate type (should reference json schema)
+    for (let [ key, val ] of keyVals) { 
         if (key === 'id') {
             filters['_id'] = mapIdVals(val as string | string[]);
         } else if (typeof val === 'string') {
@@ -153,5 +150,6 @@ const OperatorMap: { [ key: string ]: string } = {
     'gt': '$gt',
     'gte': '$gte',
     'exists': '$TODO',
+    'in': '$in',
     // TODO: regex
 }
