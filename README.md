@@ -2,13 +2,14 @@
 Progressive framework for declaratively building boilerplate CRUD JSON APIs.
 
 ## TODO: 
-2. Figure out how to make sure tests dont overwrite real DB
-3. Make routes and resource names just match
-4. Implement list filter parsing overall, translation for each client
-    - need to parse query filters (including exists, regex, lt, gte, exists) (look at `qs`)
-    - need to translate all filters to mongo query fields and SQL clauses
-4. Create all operations for base entities (without relations)
-    - for all authentication/authorization levels
-5. Decide on postgres/mongo opinions for related entities/self relationships
-6. Create all operations for related objects one level deep
-7. Create getMany, create for related resources (resource/:id/related)
+1. Implement pagination return values
+1. Create mock auth endpoints
+2. Create auth tests for get/list/create
+3. Implement replace, update, createOrUpdate, and delete endpoints
+4. Create OpenAPI Docs builder that can be served from route or merge with other docs
+5. Add logging (traceIds, segmentIds)
+6. Edge cases:
+    - mongo fields that are arrays (and [contains] operator (look up standard for that))
+    - regex filters
+    - find way to make 'initialized' properties type safe
+

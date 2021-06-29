@@ -41,17 +41,21 @@ export class MongoDbClient implements IDBClient {
         }
         const translatedFilters = translateFilters(filtersWithCorrectTypes);
 
-        const res = await this.db
+        const baseQuery = this.db
             ?.collection(resource.name + 's')
             .find(translatedFilters)
+        
+        const res = await baseQuery!
             .skip(skip)
             .limit(count);
     
         const all = await res?.toArray();
         const transformed = (all || []).map(r => ({ ...r, id: r._id }));
 
+        const total = await baseQuery!.count() as number;
+
         return {
-            total: transformed.length,
+            total: total,
             skipped: skip,
             results: transformed
         }

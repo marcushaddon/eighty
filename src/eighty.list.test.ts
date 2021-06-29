@@ -50,6 +50,7 @@ describe('list', () => {
                 .expect(200)
                 .expect(res => {
                     expect(res.body.results.length).toEqual(fixtures.users.length);
+                    expect(res.body.total).toEqual(fixtures.users.length);
                 });
         });
 
@@ -83,6 +84,7 @@ describe('list', () => {
                     const filtered = fixtures.users
                         .filter((r: { age: number }) => r.age > 40);
                     expect(res.body.results.length).toEqual(filtered.length);
+                    expect(res.body.total).toEqual(filtered.length);
                 });
         });
 
