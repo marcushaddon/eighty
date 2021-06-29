@@ -67,7 +67,7 @@ export const buildCreateValidationMiddleware = (resource: Resource): Handler => 
         if (result?.errors.length) {
             return res.status(400)
                 .json({
-                    message: 'Bad request.' + result.errors.map(e => `${e.property} ${e.message}`)
+                    message: 'Bad request: ' + result.errors.map(e => `${e.property} ${e.message}`)
                 }).end();
         }
         return next();

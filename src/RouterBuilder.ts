@@ -11,6 +11,7 @@ import { OpBuilder } from "./ops";
 import { ValidatorProvider } from "./ValidatorProvider";
 import { buildCreateOp } from "./ops/buildCreateOp";
 import { ValidationBuilder, buildCreateValidationMiddleware } from "./validation";
+import { ensureAuthenticated } from "./auth";
 
 
 export type RouteHandler = {
@@ -33,6 +34,7 @@ export class RouterBuilder {
     createRoutesAndHandlers() {
         const resources = (this.schema.resources || []);
 
+        // Register validators
         for (const resource of resources) {
             if (!resource.schemaPath) continue;
             
@@ -75,13 +77,20 @@ export class RouterBuilder {
      */
     private buildRoute(op: OperationName, resource: Resource): RouteHandler {
         const middlewares: Handler[] = [];
+        // TODO: Resolve authentication middleware
+        const operationConfig = resource.operations?.[op];
+        console.log(op, resource, 'OP CONFIG');
+        if (operationConfig?.authentication) {
+            console.log('YOU SPECIFIED AUTH');
+            middlewares.push(ensureAuthenticated);
+        }
+        // TODO: Resolve authorization middleware?
+        // Resolve validation middleware
         if (resource.schemaPath) {
             const validationBuilder = getValidationBuilder(op);
             const validationMW = validationBuilder(resource);
             middlewares.push(validationMW);
         }
-        // Resolve authentication middleware
-        // Resolve authorization middleware?
         // Resolve op middleware (might need to apply authorization)
         const opBuilder = getOpBuilder(op);
         

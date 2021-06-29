@@ -1,0 +1,8 @@
+version: "1.0.0"
+
+database:
+  type: mongodb
+
+resources:
+  - name: book
+    schemaPath: ./book.yaml

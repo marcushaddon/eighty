@@ -13,7 +13,7 @@ export const OperationNameValidator = rt.Union(
 export type OperationName = rt.Static<typeof OperationNameValidator>;
 
 export const OperationValidator = rt.Record({
-    auth: rt.Optional(rt.String),
+    authentication: rt.Optional(rt.Boolean),
     disable: rt.Optional(rt.Boolean),
 });
 

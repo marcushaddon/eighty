@@ -74,10 +74,15 @@ export class MongoDbClient implements IDBClient {
         return res;
     }
 
-    async create(resourceName: string, resource: any): Promise<EightyRecord> {
+    async create(resourceName: string, resource: any, createdBy?: string): Promise<EightyRecord> {
         let res: InsertOneWriteOpResult<any>;
         try {
-            res = await this.db!.collection(resourceName+'s').insertOne(resource);
+            const withCreatedBy = {
+                ...resource,
+                createdBy
+            };
+            res = await this.db!.collection(resourceName+'s')
+                .insertOne(withCreatedBy);
         } catch (e) {
             console.error(e);
             throw e;

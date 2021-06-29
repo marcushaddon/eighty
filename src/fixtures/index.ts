@@ -53,6 +53,9 @@ export const buildMongoFixtures = async () => {
         db = await mongo.db('local');
     }
 
+    await db.createCollection('users');
+    await db.createCollection('books');
+
     const fixtureRes = await Promise.all(users.map(u => db.collection('users').insertOne(u)));
     const mockUsers = fixtureRes.map(res => res.ops[0]);
 
@@ -61,6 +64,7 @@ export const buildMongoFixtures = async () => {
 export const cleanupMongoFixtures = async () => {
     if (!mongo) return;
     await db.dropCollection('users');
+    await db.dropCollection('books');
     await mongo.close();
 };
 

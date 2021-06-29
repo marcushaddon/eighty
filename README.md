@@ -12,4 +12,8 @@ Progressive framework for declaratively building boilerplate CRUD JSON APIs.
     - mongo fields that are arrays (and [contains] operator (look up standard for that))
     - regex filters
     - find way to make 'initialized' properties type safe
+    - negative pagination params
+    - `&field[in]=foo` not working
+    - should just log error and ignore unknown filter fields
+    - instead of exposing `init` method, just handle inittedness in DbClients
 

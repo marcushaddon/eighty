@@ -18,7 +18,7 @@ export interface IDBClient {
     disconnect(): Promise<void>;
     list(opts: ListOps): Promise<PaginatedResponse>;
     getById(resource: string, id: string): Promise<EightyRecord>;
-    create(resourceName: string, resource: any): Promise<EightyRecord>;
+    create(resourceName: string, resource: any, creatorId?: string): Promise<EightyRecord>;
 }
 
 export const resolveDbClient = (dbConfig: Database): IDBClient => {

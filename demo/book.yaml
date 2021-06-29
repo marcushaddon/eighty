@@ -1,0 +1,17 @@
+properties:
+  title:
+    type: string
+    required: true
+  pages:
+    type: number
+    required: true
+  author:
+    required: false
+    type: object
+    properties:
+      name:
+        type: string
+        required: true
+      age:
+        type: number
+        required: false
