@@ -1,14 +1,16 @@
 import { IDBClient } from "../db/db";
+import { Resource } from "../types/resource";
 import { Handler } from "express";
+import { createWriteStream } from "fs";
 
 export const buildCreateOp = ({
-    resourceName,
+    resource,
     db
 }: {
-    resourceName: string,
+    resource: Resource,
     db: IDBClient
 }): Handler => {
-    return async (req, res, next) => {
+    const create: Handler = async (req, res, next) => {
         const pending = req.body;
 
         if ((req as any).authorizer) {
@@ -22,10 +24,12 @@ export const buildCreateOp = ({
             }
         }
 
-        const created = await db.create(resourceName, pending);
+        const created = await db.create(resource.name, pending);
 
         return res.status(201)
             .json(created)
             .end();
     };
+
+    return create;
 };

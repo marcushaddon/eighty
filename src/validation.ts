@@ -1,7 +1,10 @@
-import e from "express";
+import { Handler } from "express";
 import { Validator } from "jsonschema";
 import { ParsedQs } from "qs";
 import { BadRequestError } from "./errors";
+import { Operation } from "./types/operation";
+import { Resource } from "./types/resource";
+import { ValidatorProvider } from "./ValidatorProvider";
 
 export const correctTypes = (query: ParsedQs, validator: Validator, resourceName: string): ParsedQs => {
     // BOOKMARK: parse strings where nessecary accourting to validator.schema for each path
@@ -49,6 +52,26 @@ const applyConverter = (converter: (arg: any) => any, val: any) => {
 };
 
 const CONVERTERS: { [ fieldType: string ]: (arg: any) => any } = {
-    Integer: parseInt,
-    string: val => val.toString()
+    number: parseFloat,
+    string: val => val.toString(),
+    // TODO: additional types
+};
+
+export type ValidationBuilder = (resource: Resource) => Handler;
+
+export const buildCreateValidationMiddleware = (resource: Resource): Handler => {
+    const validator = ValidatorProvider.getValidator(resource);
+    const validate: Handler = (req, res, next) => {
+        const result = validator?.validate(req.body, validator.schemas[resource.name]);
+        
+        if (result?.errors.length) {
+            return res.status(400)
+                .json({
+                    message: 'Bad request.' + result.errors.map(e => `${e.property} ${e.message}`)
+                }).end();
+        }
+        return next();
+    };
+
+    return validate;
 }

@@ -1,8 +1,10 @@
 import * as fs from 'fs';
 import * as yaml from 'yaml';
-import express, { Request, Express, Router, Handler } from 'express';
+import { json } from 'body-parser';
+import express, { Handler } from 'express';
 import { EightySchema, EightySchemaValidator } from './types/schema';
 import { RouterBuilder } from './RouterBuilder';
+import { boolOptions } from 'yaml/types';
 
 type EightyOpenApiHandler = {
     route: string;
@@ -48,8 +50,10 @@ export const eighty = (opts: EightyOpts) => {
     } = routerBuilder.createRoutesAndHandlers();
 
     const router = express();
+    router.use(json());
  
     for (const { route, handler, method } of routesAndHandlers) {
+        console.log(route, handler.map(h => h.name), method, 'REGISTERING');
         router[method](route, ...handler);
     }
 

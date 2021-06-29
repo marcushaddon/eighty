@@ -1,7 +1,6 @@
 import { Handler } from "express";
-import { ValidationError } from "jsonschema";
 import { Resource } from "./types/resource";
-import { OperationName } from "./types/operation";
+import { Operation, OperationName } from "./types/operation";
 import { HttpMethod, Operations, opMethods } from "./const/operations";
 import { EightySchema } from "./types/schema";
 import { IDBClient, resolveDbClient } from "./db/db";
@@ -10,6 +9,8 @@ import { buildGetOneOp } from "./ops/buildGetOneOp";
 import { buildListOp } from "./ops/buildListOp";
 import { OpBuilder } from "./ops";
 import { ValidatorProvider } from "./ValidatorProvider";
+import { buildCreateOp } from "./ops/buildCreateOp";
+import { ValidationBuilder, buildCreateValidationMiddleware } from "./validation";
 
 
 export type RouteHandler = {
@@ -62,6 +63,7 @@ export class RouterBuilder {
     
         // const specifiedOps = Object.keys(resource.operations || [] as string[]);
     
+        // TODO: make this opt in?
         const routes = Operations.map(op => this.buildRoute(op, resource));
     
         return routes;
@@ -73,12 +75,17 @@ export class RouterBuilder {
      */
     private buildRoute(op: OperationName, resource: Resource): RouteHandler {
         const middlewares: Handler[] = [];
+        if (resource.schemaPath) {
+            const validationBuilder = getValidationBuilder(op);
+            const validationMW = validationBuilder(resource);
+            middlewares.push(validationMW);
+        }
         // Resolve authentication middleware
         // Resolve authorization middleware?
         // Resolve op middleware (might need to apply authorization)
         const opBuilder = getOpBuilder(op);
         
-        const opMW: Handler = opBuilder({
+        const opMW = opBuilder({
             resource,
             db: this.db,
         });
@@ -99,13 +106,37 @@ const getRoute = (op: OperationName, resourceName: string): string => {
     return `/${resourceName}s/:id`;
 }
 
-const noOpBuilder = (): Handler => (req, res) => console.log(`Unknown op}`);
+const noOpBuilder = (): Handler => {
+    const noop: Handler = (req, res) => {
+        console.log(`Unknown op`);
+        res.status(404).end();
+    }
+    
+    return noop;
+}
 
 const getOpBuilder = (op: OperationName): OpBuilder => {
     const builders: { [ k: string ]: any } = {
         list: buildListOp,
         getOne: buildGetOneOp,
+        create: buildCreateOp
     };
 
-    return builders[op as string] || noOpBuilder;
+    return builders[op] || noOpBuilder;
 };
+
+const noValidationBuilder = (): Handler => {
+    const noValidation: Handler = (req, res, next) => {
+        next();
+    }
+
+    return noValidation;
+}
+
+const getValidationBuilder = (op: OperationName): ValidationBuilder => {
+    const builders: { [ k: string ]: ValidationBuilder } = {
+        create: buildCreateValidationMiddleware,
+    };
+
+    return builders[op] || noValidationBuilder;
+}

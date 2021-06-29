@@ -12,10 +12,10 @@ export const Operations: OperationName[] = [
     'list',
     'getOne',
     'create',
-    'createOrReplace',
-    'replace',
-    'update',
-    'delete',
+    // 'createOrReplace',
+    // 'replace',
+    // 'update',
+    // 'delete',
 ];
 
 export const opMethods: { [ key in OperationName ]: HttpMethod } = {

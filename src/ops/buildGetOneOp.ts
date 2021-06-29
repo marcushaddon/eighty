@@ -9,14 +9,13 @@ export const buildGetOneOp = ({
     resource: Resource,
     db: IDBClient,
 }): Handler => {
-    const op: Handler = async (req, res, next) => {
+    const getOne: Handler = async (req, res, next) => {
         const id = req.params.id;
 
         let result: any;
         try {
             result = await db.getById(resource.name, id);
         } catch (e) {
-            console.error('NOT FOUND', resource.name, e);
             return res
                 .status(e.status || 500)
                 .json({ message: e.message })
@@ -40,5 +39,5 @@ export const buildGetOneOp = ({
             .end();
     };
 
-    return op;
+    return getOne;
 }

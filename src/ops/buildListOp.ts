@@ -19,7 +19,7 @@ export const buildListOp: OpBuilder = ({
     resource: Resource,
     db: IDBClient,
 }): Handler => {
-    return async (req, res, next) => {
+    const list: Handler = async (req, res, next) => {
         const queryParams = req.query;
         const { count: countParam, skip: skipParam } = queryParams;
 
@@ -61,4 +61,6 @@ export const buildListOp: OpBuilder = ({
             .status(200)
             .json(result).end();
     };
+
+    return list;
 }

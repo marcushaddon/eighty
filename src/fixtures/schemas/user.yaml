@@ -4,10 +4,10 @@ properties:
     type: string
     required: true
   age:
-    type: Integer
+    type: number
     required: true
   score:
-    type: Integer
+    type: number
   config:
     type: object
     properties:
