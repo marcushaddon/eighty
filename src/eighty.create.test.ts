@@ -25,6 +25,7 @@ describe('create', () => {
                   - name: user
                     schemaPath: ./src/fixtures/schemas/user.yaml
                   - name: book
+                    schemaPath: ./src/fixtures/schemas/book.yaml
                     operations:
                       create:
                         authentication: true
