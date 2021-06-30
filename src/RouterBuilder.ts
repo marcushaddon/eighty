@@ -10,6 +10,7 @@ import { buildListOp } from "./ops/buildListOp";
 import { OpBuilder } from "./ops";
 import { ValidatorProvider } from "./ValidatorProvider";
 import { buildCreateOp } from "./ops/buildCreateOp";
+import { buildUpdateOp } from "./ops/buildupdateOp";
 import { ValidationBuilder, buildCreateValidationMiddleware } from "./validation";
 import { ensureAuthenticated } from "./auth";
 
@@ -128,7 +129,8 @@ const getOpBuilder = (op: OperationName): OpBuilder => {
     const builders: { [ k: string ]: any } = {
         list: buildListOp,
         getOne: buildGetOneOp,
-        create: buildCreateOp
+        create: buildCreateOp,
+        update: buildUpdateOp,
     };
 
     return builders[op] || noOpBuilder;

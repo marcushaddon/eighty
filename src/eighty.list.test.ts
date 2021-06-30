@@ -1,8 +1,8 @@
-import { Express } from 'express';
+import express, { Express } from 'express';
 import request from 'supertest';
 import { eighty } from './eighty';
 import { buildMongoFixtures, cleanupMongoFixtures } from './fixtures'; 
-import { PaginatedResponse } from './types/api';
+import { mockAuthenticator } from './fixtures/mockAuth';
 
 const mockService = {
     getOne() { return [{ name: 'test-user' }]}
@@ -20,7 +20,10 @@ describe('list', () => {
                 schemaRaw: testSchema
             });
 
-            uut = router;
+            uut = express();
+            uut.use(mockAuthenticator);
+            uut.use(router);
+
             tearDownEighty = tearDown;
 
             await init();
@@ -41,6 +44,11 @@ describe('list', () => {
         resources:
             - name: user
               schemaPath: ./src/fixtures/schemas/user.yaml
+            - name: book
+              schemaPath: ./src/fixtures/schemas/book.yaml
+              operations:
+                list:
+                  authentication: true
         `;
 
         it(`${db}: lists resources`, async () => {
@@ -111,6 +119,22 @@ describe('list', () => {
                 .send()
                 .expect(200)
                 .expect(res => expect(res.body.results.length).toEqual(2));
+        });
+
+        it(`${db}: rejects unauthenticated request for authenticated op`, async () => {
+            await request(uut)
+                .get('/books')
+                .send()
+                .expect(401);
+        });
+
+        it(`${db}: accepts authenticated request for authenticated op`, async () => {
+            await request(uut)
+                .get('/books?count=1')
+                .set({ Authorization: 'userA' })
+                .send()
+                .expect(200)
+                .expect(res => expect(res.body.results.length).toEqual(1));
         });
     });
 });

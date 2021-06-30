@@ -45,6 +45,17 @@ export const users = [
     },
 ];
 
+export const books = [
+    {
+        title: 'Test Book',
+        pages: 24,
+        author: {
+            name: 'Willy Shakespear',
+            age: 300,
+        }
+    }
+]
+
 let mongo: MongoClient;
 let db: Db;
 export const buildMongoFixtures = async () => {
@@ -56,10 +67,13 @@ export const buildMongoFixtures = async () => {
     await db.createCollection('users');
     await db.createCollection('books');
 
-    const fixtureRes = await Promise.all(users.map(u => db.collection('users').insertOne(u)));
-    const mockUsers = fixtureRes.map(res => res.ops[0]);
+    const usersRes = await Promise.all(users.map(u => db.collection('users').insertOne(u)));
+    const mockUsers = usersRes.map(res => res.ops[0]);
 
-    return { users: mockUsers };
+    const booksRes = await Promise.all(books.map(book => db.collection('books').insertOne(book)));
+    const mockBooks = booksRes.map(res => res.ops[0]);
+
+    return { users: mockUsers, books: mockBooks, };
 };
 export const cleanupMongoFixtures = async () => {
     if (!mongo) return;

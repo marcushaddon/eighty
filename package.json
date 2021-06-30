@@ -12,6 +12,7 @@
   "devDependencies": {
     "@shelf/jest-mongodb": "^1.2.5",
     "@types/express": "^4.17.12",
+    "@types/fast-json-patch": "^1.1.5",
     "@types/jest": "^26.0.23",
     "@types/mongodb": "^3.6.18",
     "@types/node": "^15.6.2",
@@ -24,6 +25,7 @@
   },
   "dependencies": {
     "express": "^4.17.1",
+    "fast-json-patch": "^3.0.0-1",
     "jsonschema": "^1.4.0",
     "mongodb": "^3.6.9",
     "qs": "^6.10.1",

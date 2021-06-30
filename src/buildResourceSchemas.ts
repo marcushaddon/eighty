@@ -13,8 +13,10 @@ export const loadSchema = (resource: Resource): jsonschema.Validator | undefined
 
     const parsed = yaml.parse(file);
 
-    const schema = new jsonschema.Validator();
-    schema.addSchema(parsed, resource.name);
+    const validator = new jsonschema.Validator();
+    validator.addSchema(parsed, resource.name);
+    console.log(validator.schemas);
+    // TODO: Resolve and add schema for patch op under resource.name+'.PATCH'
 
-    return schema;
+    return validator;
 }

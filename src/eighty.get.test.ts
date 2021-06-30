@@ -1,8 +1,8 @@
-import { Express } from 'express';
+import express, { Express } from 'express';
 import request from 'supertest';
 import { eighty } from './eighty';
 import { buildMongoFixtures, cleanupMongoFixtures } from './fixtures'; 
-import { PaginatedResponse } from './types/api';
+import { mockAuthenticator } from './fixtures/mockAuth';
 
 const mockService = {
     getOne() { return [{ name: 'test-user' }]}
@@ -16,6 +16,7 @@ describe('getOne', () => {
 
         beforeAll(async () => {
             fixtures = await buildMongoFixtures();
+            uut = express();
 
             const { router, init, tearDown } = eighty({
                 schemaRaw: `
@@ -27,10 +28,15 @@ describe('getOne', () => {
                 resources:
                   - name: user
                     schemaPath: ./src/fixtures/schemas/user.yaml
+                  - name: book
+                    operations:
+                      getOne:
+                        authentication: true
                 `
             });
 
-            uut = router;
+            uut.use(mockAuthenticator);
+            uut.use(router);
             tearDownEighty = tearDown;
 
             await init();
@@ -42,22 +48,43 @@ describe('getOne', () => {
         });
 
 
-        it('gets existing resource', async () => {
+        it(`${db}: gets existing resource`, async () => {
             const existingId = fixtures.users[0]._id;
 
             await request(uut)
             .get(`/users/${existingId}`)
             .send()
-            .expect(200);
+            .expect(200)
+            .expect(res => expect(res.body.id).toEqual(existingId.toString()));
         });
         
-        it('404s for non existant resource', async () => {
+        it(`${db}: 404s for non existant resource`, async () => {
             const nonExistantId = '60d26b6c8ff5dd8ca441d514';
 
             await request(uut)
             .get(`/users/${nonExistantId}`)
             .send()
             .expect(404);
+        });
+
+        it(`${db}: rejects unauthenticated request for authenticated op`, async () => {
+            const existingId = fixtures.books[0]._id;
+            await request(uut)
+                .get(`/books/${existingId}`)
+                .send()
+                .expect(401);
+        });
+
+        it(`${db}: allows authenticated request for authenticated op`, async () => {
+            const existingId = fixtures.books[0]._id;
+            await request(uut)
+                .get(`/books/${existingId}`)
+                .set({ Authorization: 'userB' })
+                .send()
+                .expect(200)
+                .expect(res => {
+                    expect(res.body.id).toEqual(existingId.toString());
+                });
         });
     });
 });

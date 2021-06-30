@@ -62,7 +62,6 @@ export class MongoDbClient implements IDBClient {
     }
 
     async getById(resource: string, id: string) {
-        const allEm = await this.db!.collection('users').find().toArray();
         const res = await this.db!
             .collection(resource + 's')
             .findOne({ _id: new ObjectId(id) }); // TODO: may not be able to assume valid ObjectId?
@@ -71,7 +70,10 @@ export class MongoDbClient implements IDBClient {
             `${resource} with id ${id} not found`
         );
 
-        return res;
+        const formatted = { ...res, id: res._id.toString() };
+        delete formatted._id;
+
+        return formatted;
     }
 
     async create(resourceName: string, resource: any, createdBy?: string): Promise<EightyRecord> {

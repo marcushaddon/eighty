@@ -24,7 +24,7 @@ export const buildGetOneOp = ({
 
         if ((req as any).authorizer) {
             try {
-                (req as any).authorizer((req as any).user, resource);
+                (req as any).authorizer((req as any).user, result);
             } catch (e) {
                 return res
                     .status(e.stats)
@@ -35,7 +35,7 @@ export const buildGetOneOp = ({
 
         return res
             .status(200)
-            .json(resource)
+            .json(result)
             .end();
     };
 

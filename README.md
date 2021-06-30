@@ -2,10 +2,15 @@
 Progressive framework for declaratively building boilerplate CRUD JSON APIs.
 
 ## TODO: 
-1. Implement pagination return values
-1. Create mock auth endpoints
-2. Create auth tests for get/list/create
-3. Implement replace, update, createOrUpdate, and delete endpoints
+1. Implement pagination return values xxx
+1. Create mock auth endpoints xxx
+2. Create auth tests for get/list/create xxx
+3. Map JSONPatch ops to mongo ops (need to accept optional existing resource)
+    - add -> $set
+    - remove -> $unset
+    - replace -> $set (if queried document has field)
+    - copy -> $set(fromPath, toPath)
+    - test -> not supported
 4. Create OpenAPI Docs builder that can be served from route or merge with other docs
 5. Add logging (traceIds, segmentIds)
 6. Edge cases:
