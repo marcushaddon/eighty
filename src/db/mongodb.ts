@@ -6,6 +6,7 @@ import { EightyRecord } from '../types/database';
 import { NotFoundError, BadRequestError } from '../errors';
 import { PaginatedResponse } from '../types/api';
 import { ValidatorProvider } from '../ValidatorProvider';
+import { Operation} from 'fast-json-patch';
 
 export class MongoDbClient implements IDBClient {
     private readonly connString?: string;
@@ -93,6 +94,12 @@ export class MongoDbClient implements IDBClient {
         const created = res.ops[0];
 
         return { ...created, id: created._id }
+    }
+
+    async update(resourceName: string, patches: Operation[]): Promise<EightyRecord> {
+        throw new Error('Not implemented');
+
+        return { id: 'todo' };
     }
 }
 

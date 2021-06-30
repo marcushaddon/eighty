@@ -4,10 +4,6 @@ import { eighty } from './eighty';
 import { buildMongoFixtures, cleanupMongoFixtures } from './fixtures'; 
 import { mockAuthenticator } from './fixtures/mockAuth';
 
-const mockService = {
-    getOne() { return [{ name: 'test-user' }]}
-}
-
 describe('list', () => {
     ['mongodb'].forEach(db => {
         let fixtures: any;
@@ -39,16 +35,16 @@ describe('list', () => {
         version: "1.0.0" 
 
         database:
-            type: ${db}
+          type: ${db}
 
         resources:
-            - name: user
-              schemaPath: ./src/fixtures/schemas/user.yaml
-            - name: book
-              schemaPath: ./src/fixtures/schemas/book.yaml
-              operations:
-                list:
-                  authentication: true
+          - name: user
+            schemaPath: ./src/fixtures/schemas/user.yaml
+          - name: book
+            schemaPath: ./src/fixtures/schemas/book.yaml
+            operations:
+              list:
+                authentication: true
         `;
 
         it(`${db}: lists resources`, async () => {

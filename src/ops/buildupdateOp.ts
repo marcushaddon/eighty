@@ -3,6 +3,7 @@ import { ValidatorProvider } from "../ValidatorProvider";
 import { OpBuilder } from ".";
 import { Schema, Validator, validate } from "jsonschema";
 import { validate as validatePatch } from 'fast-json-patch';
+import { endianness } from "os";
 
 export const buildUpdateOp: OpBuilder = ({ resource, db }): Handler => {
     const validator = ValidatorProvider.getValidator(resource);
@@ -14,7 +15,13 @@ export const buildUpdateOp: OpBuilder = ({ resource, db }): Handler => {
     const update: Handler = async (req, res, next) => {
         const resourceId = req.params.id;
         // TODO: Validate patch body
-        const patchValidationProblems = validatePatch(req.body);
+        const patchError = validatePatch(req.body);
+        if (patchError) {
+            return res.status(400)
+                .send({ message: patchError.message })
+                .end();
+        }
+        
         
         // Validate patch body specifically for resource if schema provided
         if (patchValidator) {

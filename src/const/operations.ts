@@ -14,7 +14,7 @@ export const Operations: OperationName[] = [
     'create',
     // 'createOrReplace',
     // 'replace',
-    // 'update',
+    'update',
     // 'delete',
 ];
 
