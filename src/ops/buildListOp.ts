@@ -3,7 +3,7 @@ import { OpBuilder } from '.';
 import { IDBClient } from '../db';
 import { PaginatedResponse } from '../types/api';
 import { Resource } from '../types/resource';
-import { ValidatorProvider } from '../ValidatorProvider';
+import { ValidatorProvider } from '../validation/ValidatorProvider';
 
 const filterPageFields = (fields: any) => {
     delete fields['count'];

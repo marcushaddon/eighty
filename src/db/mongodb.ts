@@ -6,8 +6,9 @@ import { correctTypes } from "../validation";
 import { EightyRecord } from '../types/database';
 import { NotFoundError, BadRequestError } from '../errors';
 import { PaginatedResponse } from '../types/api';
-import { ValidatorProvider } from '../ValidatorProvider';
+import { ValidatorProvider } from '../validation/ValidatorProvider';
 import { Operation} from 'fast-json-patch';
+import { Resource } from '../types/resource';
 
 export class MongoDbClient implements IDBClient {
     private readonly connString?: string;
@@ -63,15 +64,13 @@ export class MongoDbClient implements IDBClient {
         }
     }
 
-    async getById(resource: string, id: string) {
+    async getById(resource: Resource, id: string) {
         const res = await this.db!
-            .collection(resource + 's')
+            .collection(resource.name + 's')
             .findOne({ _id: new ObjectId(id) }); // TODO: may not be able to assume valid ObjectId?
 
-        
-
         if (!res) throw new NotFoundError(
-            `${resource} with id ${id} not found`
+            `${resource.name} with id ${id} not found`
         );
 
         const formatted = { ...res, id: res._id.toString() };
@@ -80,14 +79,14 @@ export class MongoDbClient implements IDBClient {
         return formatted;
     }
 
-    async create(resourceName: string, resource: any, createdBy?: string): Promise<EightyRecord> {
+    async create(resource: Resource, pending: any, createdBy?: string): Promise<EightyRecord> {
         let res: InsertOneWriteOpResult<any>;
         try {
             const withCreatedBy = {
-                ...resource,
+                ...pending,
                 createdBy
             };
-            res = await this.db!.collection(resourceName+'s')
+            res = await this.db!.collection(resource.name+'s')
                 .insertOne(withCreatedBy);
         } catch (e) {
             console.error(e);
@@ -99,30 +98,42 @@ export class MongoDbClient implements IDBClient {
         return { ...created, id: created._id }
     }
 
-    async update(resourceName: string, id: string, ops: Operation[]): Promise<EightyRecord> {
+    async update(resource: Resource, id: string, ops: Operation[]): Promise<EightyRecord | undefined> {
         // TODO: parse into mongo update ops
-        const existing = await this.getById(resourceName, id);
+        const existing = await this.getById(resource, id);
 
-        let results: OperationResult<any>[];
-        try {
-            results = ops.map(op => applyOperation(existing, op));
-        } catch (e) {
-            console.error('Encountered error applying patch', e);
-            throw new BadRequestError(e.message);
+        let results: OperationResult<any>[] = [];
+        for (const op of ops) {
+            try {
+                results.push(applyOperation(existing, op));
+            } catch (e) {
+                if (e.name === 'TEST_OPERATION_FAILED') return;
+                throw new BadRequestError('Encountered error applying patch');
+            }
         }
 
+        const validator = ValidatorProvider.getValidator(resource);
+        if (validator) {
+            const result = validator.validate(existing, validator.schemas[resource.name]);
+            if (!result.valid) {
+                const formatted = result.errors
+                    .map(err => err.toString())
+                    .join('. ')
+                throw new BadRequestError(`Error updating resource: ${formatted}`)
+            }
+        }
         // TODO: LOG RESULTS
 
-        await this.replace(resourceName, existing);
+        await this.replace(resource, existing);
 
         return existing;
     }
 
-    async replace(resourceName: string, resource: EightyRecord): Promise<void> {
-        const res = await this.db!.collection(resourceName+'s')!
+    async replace(resource: Resource, replacement: EightyRecord): Promise<void> {
+        const res = await this.db!.collection(resource.name+'s')!
             .replaceOne(
-                { _id: new ObjectId(resource.id) },
-                resource
+                { _id: new ObjectId(replacement.id) },
+                replacement
             );
     }
 }

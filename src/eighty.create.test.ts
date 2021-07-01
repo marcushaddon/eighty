@@ -6,7 +6,7 @@ import { mockAuthenticator } from './fixtures/mockAuth';
 
 describe('create', () => {
     ['mongodb'].forEach(db => {
-        let fixtures: any;
+        let fixtures: { users: any[]; books: any[] };
         let uut: Express;
         let tearDownEighty: () => Promise<void>;
 

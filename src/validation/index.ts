@@ -1,11 +1,14 @@
 import { Handler } from "express";
+import { Resource } from "../types/resource";
+
+export type ValidatorBuilder = (resource: Resource) => Handler;
+
 import { Validator } from "jsonschema";
 import { ParsedQs } from "qs";
-import { BadRequestError } from "./errors";
-import { Operation } from "./types/operation";
-import { Resource } from "./types/resource";
-import { ValidatorProvider } from "./ValidatorProvider";
+import { BadRequestError } from "../errors";
 
+// TODO: Put this in file specific to list validation/parsing
+// TODO: This should be middleware
 export const correctTypes = (query: ParsedQs, validator: Validator, resourceName: string): ParsedQs => {
     // BOOKMARK: parse strings where nessecary accourting to validator.schema for each path
     const corrected: { [ key: string ]: any} = {};
@@ -47,6 +50,7 @@ const applyConverter = (converter: (arg: any) => any, val: any) => {
         keyVals.forEach(([ key, val ]) => converted[key] = val);
         return converted;
     } else {
+        // TODO: This should respect unknown field policy
         throw new Error(`Unknown filter val type ${val}`);
     }
 };
@@ -56,22 +60,3 @@ const CONVERTERS: { [ fieldType: string ]: (arg: any) => any } = {
     string: val => val.toString(),
     // TODO: additional types
 };
-
-export type ValidationBuilder = (resource: Resource) => Handler;
-
-export const buildCreateValidationMiddleware = (resource: Resource): Handler => {
-    const validator = ValidatorProvider.getValidator(resource);
-    const validate: Handler = (req, res, next) => {
-        const result = validator?.validate(req.body, validator.schemas[resource.name]);
-        
-        if (result?.errors.length) {
-            return res.status(400)
-                .json({
-                    message: 'Bad request: ' + result.errors.map(e => `${e.property} ${e.message}`)
-                }).end();
-        }
-        return next();
-    };
-
-    return validate;
-}

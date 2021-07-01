@@ -1,6 +1,6 @@
 import { Handler } from "express";
 import { Resource } from "./types/resource";
-import { Operation, OperationName } from "./types/operation";
+import { OperationName } from "./types/operation";
 import { HttpMethod, Operations, opMethods } from "./const/operations";
 import { EightySchema } from "./types/schema";
 import { IDBClient, resolveDbClient } from "./db/db";
@@ -8,11 +8,13 @@ import { loadSchema } from "./buildResourceSchemas";
 import { buildGetOneOp } from "./ops/buildGetOneOp";
 import { buildListOp } from "./ops/buildListOp";
 import { OpBuilder } from "./ops";
-import { ValidatorProvider } from "./ValidatorProvider";
+import { ValidatorProvider } from "./validation/ValidatorProvider";
 import { buildCreateOp } from "./ops/buildCreateOp";
-import { buildUpdateOp } from "./ops/buildupdateOp";
-import { ValidationBuilder, buildCreateValidationMiddleware } from "./validation";
+import { buildUpdateOp } from "./ops/buildUpdateOp";
+import { ValidatorBuilder } from "./validation";
+import { buildCreateValidationMiddleware } from "./validation/buildCreateValidator";
 import { ensureAuthenticated } from "./auth";
+import { buildPatchValidationMiddleware } from "./validation/buildPatchValidator";
 
 
 export type RouteHandler = {
@@ -78,7 +80,6 @@ export class RouterBuilder {
      */
     private buildRoute(op: OperationName, resource: Resource): RouteHandler {
         const middlewares: Handler[] = [];
-        // TODO: Resolve authentication middleware
         const operationConfig = resource.operations?.[op];
 
         if (operationConfig?.authentication) {
@@ -115,6 +116,7 @@ const getRoute = (op: OperationName, resourceName: string): string => {
     return `/${resourceName}s/:id`;
 }
 
+// TODO: move these to ops/
 const noOpBuilder = (): Handler => {
     const noop: Handler = (req, res) => {
         res.status(404).end();
@@ -142,9 +144,11 @@ const noValidationBuilder = (): Handler => {
     return noValidation;
 }
 
-const getValidationBuilder = (op: OperationName): ValidationBuilder => {
-    const builders: { [ k: string ]: ValidationBuilder } = {
+// TODO: Move this to validation/
+const getValidationBuilder = (op: OperationName): ValidatorBuilder => {
+    const builders: { [ k: string ]: ValidatorBuilder } = {
         create: buildCreateValidationMiddleware,
+        update: buildPatchValidationMiddleware
     };
 
     return builders[op] || noValidationBuilder;

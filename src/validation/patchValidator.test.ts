@@ -1,7 +1,7 @@
 import { Validator } from "jsonschema";
-import { buildPatchValidator } from "./buildupdateOp";
+import { buildPatchValidator } from "./buildPatchValidator";
 
-describe('buildPatchValidator', () => {
+describe('patchValidator', () => {
     const validator = new Validator();
     validator.addSchema({
         properties: {
@@ -22,17 +22,17 @@ describe('buildPatchValidator', () => {
         }
     }, 'test');
 
-    const patchValidator = buildPatchValidator(validator);
+    const permissiveValidator = buildPatchValidator(validator, 'allow');
 
     it('ignores unkown paths', () => {
-        const res = patchValidator([
+        const res = permissiveValidator([
             { op: 'replace', path: '/foo', value: 'bar' }
         ]);
         expect(res.length).toEqual(0);
     })
 
     it('invalidates invalid values', () => {
-        const res = patchValidator([
+        const res = permissiveValidator([
             { op: 'replace', path: '/name', value: 34 }
         ]);
 
@@ -41,7 +41,7 @@ describe('buildPatchValidator', () => {
     });
 
     it('invalidates nested paths', () => {
-        const res = patchValidator([
+        const res = permissiveValidator([
             { op: 'replace', path: '/meta/score', value: []}
         ]);
 
@@ -49,7 +49,7 @@ describe('buildPatchValidator', () => {
     });
 
     it('validates object types', () => {
-        const res = patchValidator([
+        const res = permissiveValidator([
             { op: 'replace', path: '/meta', value: { score: 45 }}
         ]);
 
@@ -57,7 +57,7 @@ describe('buildPatchValidator', () => {
     });
 
     it('invalidates object types', () => {
-        const res = patchValidator([
+        const res = permissiveValidator([
             { op: 'replace', path: '/meta', value: { score: 'foo' }}
         ]);
 

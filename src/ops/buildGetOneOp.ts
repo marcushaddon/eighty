@@ -14,7 +14,7 @@ export const buildGetOneOp = ({
 
         let result: any;
         try {
-            result = await db.getById(resource.name, id);
+            result = await db.getById(resource, id);
         } catch (e) {
             return res
                 .status(e.status || 500)

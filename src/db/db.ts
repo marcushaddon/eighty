@@ -18,9 +18,9 @@ export interface IDBClient {
     connect(): Promise<void>;
     disconnect(): Promise<void>;
     list(opts: ListOps): Promise<PaginatedResponse>;
-    getById(resource: string, id: string): Promise<EightyRecord>;
-    create(resourceName: string, resource: any, creatorId?: string): Promise<EightyRecord>;
-    update(resourceName: string, resourceId: string, patch: jsonpatch.Operation[], modifierId?: string): Promise<EightyRecord>;
+    getById(resource: Resource, id: string): Promise<EightyRecord>;
+    create(resource: Resource, pending: any, creatorId?: string): Promise<EightyRecord>;
+    update(resource: Resource, resourceId: string, patch: jsonpatch.Operation[], modifierId?: string): Promise<EightyRecord | undefined>;
 }
 
 export const resolveDbClient = (dbConfig: Database): IDBClient => {

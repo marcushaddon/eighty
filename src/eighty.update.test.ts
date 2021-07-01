@@ -11,15 +11,6 @@ describe('update', () => {
         let fixtures: any;
         let teardown: () => Promise<void>;
 
-        const bookBlueprint = {
-            title: 'Blueprint',
-            pages: 35,
-            author: {
-                name: 'Test author',
-                age: 100
-            }
-        };
-
         beforeAll(async () => {
             const testSchema = `
             version: "1.0.0"
@@ -33,6 +24,7 @@ describe('update', () => {
                 operations:
                   update:
                     authentication: true
+                    unknownFieldsPolicy: allow
             `;
 
             uut = express();
@@ -133,15 +125,15 @@ describe('update', () => {
                 ...book,
                 id: book._id.toString(),
                 foo: 'bar',
-                _id: undefined
             };
-
+            delete expected._id
+;
             await request(uut)
                 .patch(`/books/${book._id.toString()}`)
                 .set({ Authorization: 'userA' })
                 .send([
                     { op: 'add', path: '/foo', value: 'bar'}
-                ]).expect(200)
+                ]).expect(200);
 
             await request(uut)
                 .get(`/books/${book._id.toString()}`)
@@ -196,7 +188,6 @@ describe('update', () => {
 
         
         // Book 4
-        // TODO: applies copy op
         it(`${db}: applies valid copy op`, async () => {
             const book = fixtures.books[4];
             const expected = { 
@@ -224,13 +215,94 @@ describe('update', () => {
                     res => expect(res.body).toEqual(expected)
                 )
         })
+
         // Book 5
-        // TODO: applies operation if test passes
+        it(`${db}: applies op if test passes`, async () => {
+            const book = fixtures.books[5];
+            const url = `/books/${book._id.toString()}`;
+
+            await request(uut)
+                .patch(url)
+                .set({ Authorization: 'userA' })
+                .send([
+                    { op: 'test', path: '/title', value: fixtures.books[5].title },
+                    { op: 'replace', path: '/title', value: 'Changed' }
+                ]).expect(200);
+            
+            await request(uut)
+                .get(url)
+                .send()
+                .expect(res => expect(res.body.title).toEqual('Changed'));
+        })
+
         // TODO: doesnt apply operation if test fails (include one passing test)
+        it(`${db}: doesnt apply change if test fails`, async () => {
+            const book = fixtures.books[6];
+            const url = `/books/${book._id.toString()}`;
+
+            await request(uut)
+                .patch(url)
+                .set({ Authorization: 'userA' })
+                .send([
+                    { op: 'test', path: '/title', value: 'not' + book.title },
+                    { op: 'replace', path: '/title', value: 'Changed' }
+                ]).expect(200);
+            
+            await request(uut)
+                .get(url)
+                .send()
+                .expect(res => {
+                    expect(res.body.title).not.toEqual('Changed');
+                    expect(res.body.title).toEqual(book.title);
+                });
+        });
+
         // TODO: rejects operation that puts resource into invalid state
-        // Book 6
-        // TODO: applies multiple valid ops
-        // TODO: rejects all ops if one fails
+        it(`${db}: rejects operation that puts resource into invalid state`, async () => {
+            const book = fixtures.books[7];
+            const url = `/books/${book._id.toString()}`;
+
+            await request(uut)
+                .patch(url)
+                .set({ Authorization: 'userA' })
+                .send([
+                    { op: 'remove', path: '/title' },
+                    { op: 'remove', path: '/author/name' }
+                ]).expect(400);
+            
+            await request(uut)
+                .get(url)
+                .send()
+                .expect(200)
+                .expect(res => expect(res.body.title).toEqual(book.title));
+        })
+        // Book 8
+        it(`${db}: it applies multiple valid ops`, async () => {
+            const book = fixtures.books[8];
+            const url = `/books/${book._id.toString()}`;
+
+            await request(uut)
+                .patch(url)
+                .set({ Authorization: 'userA' })
+                .send([
+                    { op: 'replace', path: '/title', value: 'Better title' },
+                    { op: 'copy', from: '/author/age', path: '/pages' }
+                ]).expect(200);
+            
+            await request(uut)
+                .get(url)
+                .send()
+                .expect(res => {
+                    expect(res.body.title).toEqual('Better title');
+                    expect(res.body.pages).toEqual(res.body.author.age);
+                })
+        });
+
+        // Book 9
+
+        it.skip(`${db}: rejects all ops if one fails`, async () => {
+            // Not sure how to implement this
+        })
     });
     
 })

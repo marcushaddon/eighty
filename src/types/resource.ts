@@ -1,7 +1,6 @@
 import * as rt from 'runtypes';
 import { OperationValidator, OperationNameValidator } from './operation';
 
-
 export const ResourceValidator = rt.Record({
     name: rt.String,
     schemaPath: rt.Optional(rt.String),

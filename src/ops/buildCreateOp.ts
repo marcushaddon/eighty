@@ -29,7 +29,7 @@ export const buildCreateOp = ({
             createdBy = (req as any).user.id;
         }
 
-        const created = await db.create(resource.name, pending, createdBy);
+        const created = await db.create(resource, pending, createdBy);
 
         return res.status(201)
             .json(created)

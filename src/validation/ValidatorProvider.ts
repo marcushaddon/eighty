@@ -1,5 +1,5 @@
 import { ValidationError, Validator } from "jsonschema";
-import { Resource } from "./types/resource";
+import { Resource } from "../types/resource";
 
 export class ValidatorProvider {
     static validators: Map<string, Validator> = new Map();
