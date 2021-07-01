@@ -80,9 +80,8 @@ export class RouterBuilder {
         const middlewares: Handler[] = [];
         // TODO: Resolve authentication middleware
         const operationConfig = resource.operations?.[op];
-        console.log(op, resource, 'OP CONFIG');
+
         if (operationConfig?.authentication) {
-            console.log('YOU SPECIFIED AUTH');
             middlewares.push(ensureAuthenticated);
         }
         // TODO: Resolve authorization middleware?
@@ -118,7 +117,6 @@ const getRoute = (op: OperationName, resourceName: string): string => {
 
 const noOpBuilder = (): Handler => {
     const noop: Handler = (req, res) => {
-        console.log(`Unknown op`);
         res.status(404).end();
     }
     

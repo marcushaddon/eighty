@@ -24,11 +24,11 @@ describe('buildPatchValidator', () => {
 
     const patchValidator = buildPatchValidator(validator);
 
-    it('invalidates invalid paths', () => {
+    it('ignores unkown paths', () => {
         const res = patchValidator([
             { op: 'replace', path: '/foo', value: 'bar' }
         ]);
-        expect(res).toContain('/foo is not a valid PATCH path');
+        expect(res.length).toEqual(0);
     })
 
     it('invalidates invalid values', () => {

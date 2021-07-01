@@ -20,7 +20,7 @@ export interface IDBClient {
     list(opts: ListOps): Promise<PaginatedResponse>;
     getById(resource: string, id: string): Promise<EightyRecord>;
     create(resourceName: string, resource: any, creatorId?: string): Promise<EightyRecord>;
-    update(resourceName: string, patch: jsonpatch.Operation[], modifierId?: string): Promise<EightyRecord>;
+    update(resourceName: string, resourceId: string, patch: jsonpatch.Operation[], modifierId?: string): Promise<EightyRecord>;
 }
 
 export const resolveDbClient = (dbConfig: Database): IDBClient => {

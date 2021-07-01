@@ -45,16 +45,15 @@ export const users = [
     },
 ];
 
-export const books = [
-    {
-        title: 'Test Book',
-        pages: 24,
+export const books = Array.from(Array(10).keys())
+    .map(i => ({
+        title: `Test Book ${i}`,
+        pages: 10 * i,
         author: {
-            name: 'Willy Shakespear',
-            age: 300,
+            name: 'Willy Shakespea' + 'r'.repeat(i),
+            age: 5 * i,
         }
-    }
-]
+    }))
 
 let mongo: MongoClient;
 let db: Db;

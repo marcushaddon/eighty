@@ -3,7 +3,6 @@ import { ValidatorProvider } from "../ValidatorProvider";
 import { OpBuilder } from ".";
 import { Schema, Validator, validate } from "jsonschema";
 import { validate as validatePatch } from 'fast-json-patch';
-import { endianness } from "os";
 
 export const buildUpdateOp: OpBuilder = ({ resource, db }): Handler => {
     const validator = ValidatorProvider.getValidator(resource);
@@ -14,7 +13,7 @@ export const buildUpdateOp: OpBuilder = ({ resource, db }): Handler => {
     
     const update: Handler = async (req, res, next) => {
         const resourceId = req.params.id;
-        // TODO: Validate patch body
+
         const patchError = validatePatch(req.body);
         if (patchError) {
             return res.status(400)
@@ -44,10 +43,24 @@ export const buildUpdateOp: OpBuilder = ({ resource, db }): Handler => {
             }
         }
         // TODO: apply patch op to db
-        const result = await db.update(resource.name, req.body, (req as any).user.id);
+        let result: any;
+        try {
+            result = await db.update(
+                resource.name,
+                resourceId,
+                req.body,
+                (req as any).user.id
+            );
+        } catch (e) {
 
-        return res.status(204)
-            .json(result)
+            return res.status(e.status)
+                .send({ message: e.message })
+                .end();
+        }
+
+
+        return res.status(200)
+            .send(result)
             .end();
     };
 
@@ -55,23 +68,21 @@ export const buildUpdateOp: OpBuilder = ({ resource, db }): Handler => {
 }
 
 export const buildPatchValidator = (validator: Validator): (patch: any[]) => string[] => {
-    const validPaths: { [ path: string ]: Schema } = {};
+    const knownPaths: { [ path: string ]: Schema } = {};
     // TODO: populate validPaths
     for (const [ path, schema ] of Object.entries(validator.schemas)) {
         const stripped = path.replace(/^\w+#/i, '');
         const deflated = stripped.replace(/\/properties/g, '');
-        validPaths[deflated] = schema;
+        const clonedSchema = JSON.parse(JSON.stringify(schema));
+        delete clonedSchema.required;
+        knownPaths[deflated] = clonedSchema;
     }
 
     return (patch: any[]): string[] => {
         const problems: string[] = [];
-        for (const { op, path, value } of patch) {
-            if (!(path in validPaths)) {
-                problems.push(`${path} is not a valid PATCH path`);
-                continue;
-            }
-
-            const schema = validPaths[path];
+        const checkablePatches = patch.filter(p => p.path in knownPaths);
+        for (const { op, path, value } of checkablePatches) {
+            const schema = knownPaths[path];
             const result = validate(value, schema);
             for (const res of result.errors) {
                 problems.push(`${[ path, res.path ].join('/').replace(/\/$/, '')} ${res.message}`);

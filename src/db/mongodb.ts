@@ -1,5 +1,6 @@
 import { MongoClient, Db, InsertOneWriteOpResult, ObjectId, FilterQuery } from 'mongodb';
 import { ParsedQs } from 'qs';
+import { applyOperation, OperationResult } from "fast-json-patch";
 import { IDBClient, ListOps } from "./db";
 import { correctTypes } from "../validation";
 import { EightyRecord } from '../types/database';
@@ -67,6 +68,8 @@ export class MongoDbClient implements IDBClient {
             .collection(resource + 's')
             .findOne({ _id: new ObjectId(id) }); // TODO: may not be able to assume valid ObjectId?
 
+        
+
         if (!res) throw new NotFoundError(
             `${resource} with id ${id} not found`
         );
@@ -96,10 +99,31 @@ export class MongoDbClient implements IDBClient {
         return { ...created, id: created._id }
     }
 
-    async update(resourceName: string, patches: Operation[]): Promise<EightyRecord> {
-        throw new Error('Not implemented');
+    async update(resourceName: string, id: string, ops: Operation[]): Promise<EightyRecord> {
+        // TODO: parse into mongo update ops
+        const existing = await this.getById(resourceName, id);
 
-        return { id: 'todo' };
+        let results: OperationResult<any>[];
+        try {
+            results = ops.map(op => applyOperation(existing, op));
+        } catch (e) {
+            console.error('Encountered error applying patch', e);
+            throw new BadRequestError(e.message);
+        }
+
+        // TODO: LOG RESULTS
+
+        await this.replace(resourceName, existing);
+
+        return existing;
+    }
+
+    async replace(resourceName: string, resource: EightyRecord): Promise<void> {
+        const res = await this.db!.collection(resourceName+'s')!
+            .replaceOne(
+                { _id: new ObjectId(resource.id) },
+                resource
+            );
     }
 }
 

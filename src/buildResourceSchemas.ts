@@ -15,8 +15,6 @@ export const loadSchema = (resource: Resource): jsonschema.Validator | undefined
 
     const validator = new jsonschema.Validator();
     validator.addSchema(parsed, resource.name);
-    console.log(validator.schemas);
-    // TODO: Resolve and add schema for patch op under resource.name+'.PATCH'
 
     return validator;
 }

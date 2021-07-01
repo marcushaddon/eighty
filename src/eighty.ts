@@ -51,11 +51,15 @@ export const eighty = (opts: EightyOpts) => {
 
     const router = express();
     router.use(json());
+
+    const middlewareReport: string[][] = [];
  
     for (const { route, handler, method } of routesAndHandlers) {
-        console.log(route, handler.map(h => h.name), method, 'REGISTERING');
+        middlewareReport.push([ method, route, handler.map(h => h.name).join('->') ])
         router[method](route, ...handler);
     }
+
+    console.table(middlewareReport);
 
     return { init, tearDown, router };
 };
