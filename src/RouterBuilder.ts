@@ -15,6 +15,7 @@ import { ValidatorBuilder } from "./validation";
 import { buildCreateValidationMiddleware } from "./validation/buildCreateValidator";
 import { ensureAuthenticated } from "./auth";
 import { buildPatchValidationMiddleware } from "./validation/buildPatchValidator";
+import { buildReplaceOp } from "./ops/buildReplaceOp";
 
 
 export type RouteHandler = {
@@ -130,6 +131,7 @@ const getOpBuilder = (op: OperationName): OpBuilder => {
         list: buildListOp,
         getOne: buildGetOneOp,
         create: buildCreateOp,
+        replace: buildReplaceOp,
         update: buildUpdateOp,
     };
 
@@ -148,6 +150,7 @@ const noValidationBuilder = (): Handler => {
 const getValidationBuilder = (op: OperationName): ValidatorBuilder => {
     const builders: { [ k: string ]: ValidatorBuilder } = {
         create: buildCreateValidationMiddleware,
+        replace: buildCreateValidationMiddleware,
         update: buildPatchValidationMiddleware
     };
 

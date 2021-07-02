@@ -13,7 +13,7 @@ export const Operations: OperationName[] = [
     'getOne',
     'create',
     // 'createOrReplace',
-    // 'replace',
+    'replace',
     'update',
     // 'delete',
 ];

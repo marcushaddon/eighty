@@ -304,5 +304,4 @@ describe('update', () => {
             // Not sure how to implement this
         })
     });
-    
 })

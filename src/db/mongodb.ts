@@ -124,15 +124,15 @@ export class MongoDbClient implements IDBClient {
         }
         // TODO: LOG RESULTS
 
-        await this.replace(resource, existing);
+        await this.replace(resource, existing.id, existing);
 
         return existing;
     }
 
-    async replace(resource: Resource, replacement: EightyRecord): Promise<void> {
+    async replace(resource: Resource, id: string, replacement: EightyRecord, replacerId?: string): Promise<void> {
         const res = await this.db!.collection(resource.name+'s')!
             .replaceOne(
-                { _id: new ObjectId(replacement.id) },
+                { _id: new ObjectId(id) },
                 replacement
             );
     }

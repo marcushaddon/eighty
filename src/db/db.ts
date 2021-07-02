@@ -21,6 +21,7 @@ export interface IDBClient {
     getById(resource: Resource, id: string): Promise<EightyRecord>;
     create(resource: Resource, pending: any, creatorId?: string): Promise<EightyRecord>;
     update(resource: Resource, resourceId: string, patch: jsonpatch.Operation[], modifierId?: string): Promise<EightyRecord | undefined>;
+    replace(resource: Resource, id: string, replacement: EightyRecord, replacerId?: string): Promise<void>;
 }
 
 export const resolveDbClient = (dbConfig: Database): IDBClient => {
