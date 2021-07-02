@@ -3,14 +3,6 @@ import { OpBuilder } from '.';
 import { IDBClient } from '../db';
 import { PaginatedResponse } from '../types/api';
 import { Resource } from '../types/resource';
-import { ValidatorProvider } from '../validation/ValidatorProvider';
-
-const filterPageFields = (fields: any) => {
-    delete fields['count'];
-    delete fields['skip'];
-
-    return fields;
-}
 
 export const buildListOp: OpBuilder = ({
     resource,
@@ -20,13 +12,7 @@ export const buildListOp: OpBuilder = ({
     db: IDBClient,
 }): Handler => {
     const list: Handler = async (req, res, next) => {
-        const queryParams = req.query;
-        const { count: countParam, skip: skipParam } = queryParams;
-
-        const filters = filterPageFields(queryParams);
-
-        const count = countParam && parseInt(countParam as string) || 20;
-        const skip = skipParam && parseInt(skipParam as string) || 0;
+        const { count, skip, filters } = req as any;
 
         const params = {
             resource,

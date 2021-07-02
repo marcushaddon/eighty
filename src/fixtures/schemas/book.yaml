@@ -15,3 +15,8 @@ properties:
       age:
         required: false
         type: number
+  themes:
+    required: false
+    type: array
+    items:
+      type: string

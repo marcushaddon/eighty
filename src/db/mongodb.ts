@@ -2,7 +2,7 @@ import { MongoClient, Db, InsertOneWriteOpResult, ObjectId, FilterQuery } from '
 import { ParsedQs } from 'qs';
 import { applyOperation, OperationResult } from "fast-json-patch";
 import { IDBClient, ListOps } from "./db";
-import { correctTypes } from "../validation";
+
 import { EightyRecord } from '../types/database';
 import { NotFoundError, BadRequestError } from '../errors';
 import { PaginatedResponse } from '../types/api';
@@ -37,12 +37,9 @@ export class MongoDbClient implements IDBClient {
         count = 20,
         filters = {}
     }: ListOps): Promise<PaginatedResponse> {
-        let filtersWithCorrectTypes = filters;
-        const resourceSchema = ValidatorProvider.getValidator(resource);
-        if (resourceSchema) {
-            filtersWithCorrectTypes = correctTypes(filters, resourceSchema, resource.name);
-        }
-        const translatedFilters = translateFilters(filtersWithCorrectTypes);
+        console.log(filters, 'OUR FILTERS');
+        const translatedFilters = translateFilters(filters);
+        console.log(translatedFilters, 'OUR TRANSLATED FILERS');
 
         const baseQuery = this.db
             ?.collection(resource.name + 's')
@@ -99,7 +96,7 @@ export class MongoDbClient implements IDBClient {
     }
 
     async update(resource: Resource, id: string, ops: Operation[]): Promise<EightyRecord | undefined> {
-        // TODO: parse into mongo update ops
+        // TODO: parse into mongo update ops?
         const existing = await this.getById(resource, id);
 
         let results: OperationResult<any>[] = [];
@@ -136,6 +133,11 @@ export class MongoDbClient implements IDBClient {
                 replacement
             );
     }
+
+    async delete(resourceName: string, id: string): Promise<void> {
+        await this.db!.collection(resourceName+'s')
+            .deleteOne({ _id: new ObjectId(id) });
+    }
 }
 
 export const translateFilters = (parsedQueryString: ParsedQs) => {
@@ -146,9 +148,12 @@ export const translateFilters = (parsedQueryString: ParsedQs) => {
     // Extract filters by fields
     const keyVals = Object.entries(parsedQueryString);
     
-    for (let [ key, val ] of keyVals) { 
+    for (let [ key, val ] of keyVals) {
+        console.log(key, val, 'TRANSLATING THIS');
         if (key === 'id') {
+            console.log('ITS AN ID FIELD');
             filters['_id'] = mapIdVals(val as string | string[]);
+            console.log(filters, 'AFTER MAPPING ID FIELD');
         } else if (typeof val === 'string') {
             filters[key] = val;
         } else if (Array.isArray(val)) {
@@ -183,6 +188,8 @@ const mapIdVals = (vals: string | string[]) => {
         return { $in };
     } else if (typeof vals === 'string') {
         return new ObjectId(vals);
+    } else if (typeof vals === 'object') {
+        throw new Error('[in] notation for id field to be implemented!')
     } else {
         throw new BadRequestError(`Invalid type for id field: ${typeof vals}`);
     }

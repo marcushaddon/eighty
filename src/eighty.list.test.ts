@@ -40,11 +40,16 @@ describe('list', () => {
         resources:
           - name: user
             schemaPath: ./src/fixtures/schemas/user.yaml
+            operations:
+              list:
+                authentication: false
+                unknownFieldsPolicy: reject
           - name: book
             schemaPath: ./src/fixtures/schemas/book.yaml
             operations:
               list:
                 authentication: true
+                unknownFieldsPolicy: allow
         `;
 
         it(`${db}: lists resources`, async () => {
@@ -102,11 +107,28 @@ describe('list', () => {
                 });
         });
 
-        it(`${db}: rejects filters for unknown fields`, async () => {
+        it(`${db}: filters on id field`, async () => {
+            const books = fixtures.books.slice(0, 2);
+            // repeated notation
+            const url1 = `/books?${books.map((book: any) => `id=${book._id.toString()}`).join('&')}`;
+            // [in] notation
+            const url2 = `/books?${books.map((book: any) => `id[in]=${book._id.toString()}`).join('&')}`;
+
+            console.log(url1, 'URL1');
+
             await request(uut)
-                .get('/users?unknownField=foo') // A field not in resources schema
+                .get(url1)
+                .set({ Authorization: 'userA' })
                 .send()
-                .expect(400);
+                .expect(200)
+                .expect(res => expect(res.body.results.length).toEqual(2));
+
+            // await request(uut)
+            //     .get(url2)
+            //     .set({ Authorization: 'userA' })
+            //     .send()
+            //     .expect(200)
+            //     .expect(res => expect(res.body.results.length).toEqual(2));
         });
 
         it(`${db}: applies filter operators on nested fields`, async () => {
@@ -132,5 +154,19 @@ describe('list', () => {
                 .expect(200)
                 .expect(res => expect(res.body.results.length).toEqual(1));
         });
+
+        it(`${db}: rejects filters on unknown fields when unknownFieldsPolicy: reject`, async () => {
+            await request(uut)
+                .get('/users?foo[gt]=aaa')
+                .send()
+                .expect(400);
+        });
+
+        it(`${db}: accepts filters on unkown fields (assuming they are strings) when unknownFieldsPolicy: accept`, async () => {
+            await request(uut)
+                .get('/books?notInSchema[gt]=aaa')
+                .set({ Authorization: 'userA' })
+                .expect(200);
+        })
     });
 });

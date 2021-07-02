@@ -1,5 +1,5 @@
-import { IDBClient } from "../db/db";
 import { Handler } from "express";
+import { IDBClient } from "../db/db";
 import { Resource } from "../types/resource";
 
 export const buildGetOneOp = ({

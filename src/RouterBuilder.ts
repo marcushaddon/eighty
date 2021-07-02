@@ -5,17 +5,20 @@ import { HttpMethod, Operations, opMethods } from "./const/operations";
 import { EightySchema } from "./types/schema";
 import { IDBClient, resolveDbClient } from "./db/db";
 import { loadSchema } from "./buildResourceSchemas";
+import { buildCreateOp } from "./ops/buildCreateOp";
+import { buildReplaceOp } from "./ops/buildReplaceOp";
+import { buildUpdateOp } from "./ops/buildUpdateOp";
+import { buildDeleteOp } from "./ops/buildDeleteOp";
 import { buildGetOneOp } from "./ops/buildGetOneOp";
 import { buildListOp } from "./ops/buildListOp";
 import { OpBuilder } from "./ops";
 import { ValidatorProvider } from "./validation/ValidatorProvider";
-import { buildCreateOp } from "./ops/buildCreateOp";
-import { buildUpdateOp } from "./ops/buildUpdateOp";
 import { ValidatorBuilder } from "./validation";
 import { buildCreateValidationMiddleware } from "./validation/buildCreateValidator";
 import { ensureAuthenticated } from "./auth";
 import { buildPatchValidationMiddleware } from "./validation/buildPatchValidator";
-import { buildReplaceOp } from "./ops/buildReplaceOp";
+import { buildListValidationMiddleware} from "./validation/buildListValidator";
+
 
 
 export type RouteHandler = {
@@ -54,6 +57,7 @@ export class RouterBuilder {
         const flattened = resourceRoutes
             .reduce((acc, current) => [ ...acc, ...current ]);
         
+        // TODO: just manage this in db
         const init = this.db.connect.bind(this.db);
         const tearDown = this.db.disconnect.bind(this.db);
     
@@ -87,7 +91,7 @@ export class RouterBuilder {
             middlewares.push(ensureAuthenticated);
         }
         // TODO: Resolve authorization middleware?
-        // Resolve validation middleware
+        // Resolve validation middleware (TODO: if there is no schema we still need to parse pagination params)
         if (resource.schemaPath) {
             const validationBuilder = getValidationBuilder(op);
             const validationMW = validationBuilder(resource);
@@ -95,7 +99,7 @@ export class RouterBuilder {
         }
         // Resolve op middleware (might need to apply authorization)
         const opBuilder = getOpBuilder(op);
-        
+
         const opMW = opBuilder({
             resource,
             db: this.db,
@@ -133,6 +137,7 @@ const getOpBuilder = (op: OperationName): OpBuilder => {
         create: buildCreateOp,
         replace: buildReplaceOp,
         update: buildUpdateOp,
+        delete: buildDeleteOp,
     };
 
     return builders[op] || noOpBuilder;
@@ -149,6 +154,7 @@ const noValidationBuilder = (): Handler => {
 // TODO: Move this to validation/
 const getValidationBuilder = (op: OperationName): ValidatorBuilder => {
     const builders: { [ k: string ]: ValidatorBuilder } = {
+        list: buildListValidationMiddleware,
         create: buildCreateValidationMiddleware,
         replace: buildCreateValidationMiddleware,
         update: buildPatchValidationMiddleware

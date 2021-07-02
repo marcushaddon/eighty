@@ -15,7 +15,7 @@ export const Operations: OperationName[] = [
     // 'createOrReplace',
     'replace',
     'update',
-    // 'delete',
+    'delete',
 ];
 
 export const opMethods: { [ key in OperationName ]: HttpMethod } = {

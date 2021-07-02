@@ -6,23 +6,34 @@ export type ValidatorBuilder = (resource: Resource) => Handler;
 import { Validator } from "jsonschema";
 import { ParsedQs } from "qs";
 import { BadRequestError } from "../errors";
+import { UnknownFieldsPolicy } from "../types/operation";
+import { ValidatorProvider } from "./ValidatorProvider";
 
 // TODO: Put this in file specific to list validation/parsing
 // TODO: This should be middleware
-export const correctTypes = (query: ParsedQs, validator: Validator, resourceName: string): ParsedQs => {
-    // BOOKMARK: parse strings where nessecary accourting to validator.schema for each path
+export const correctTypes = (query: ParsedQs, resource: Resource, unknownFieldPolicy: UnknownFieldsPolicy): ParsedQs => {
+    console.log(query, 'CORRECTING THIS');
+    const validator = ValidatorProvider.getValidator(resource);
+    if (!validator) {
+        // TODO: Maybe we should throw if unknownFieldsPolicy: reject? hmm
+        return query;
+    }
     const corrected: { [ key: string ]: any} = {};
     // parse dotted paths into schema path style
     for (const path in query) {
-        const translated = dottedToSchemaPath(path, resourceName);
+        const translated = dottedToSchemaPath(path, resource.name);
         const fieldType = validator.schemas[translated]?.type as string;
 
         const converter = CONVERTERS[fieldType];
         if (!converter) {
-            throw new BadRequestError(`
-            Unable to filter on unknown field: ${path}.
-            To filter on a field, it must be defined in the resources schema
-            `);
+            if (unknownFieldPolicy === 'reject') {
+                throw new BadRequestError(`
+                Unable to filter on unknown field: ${path}.
+                To filter on a field, it must be defined in the resources schema
+                `);
+            };
+            corrected[path] = query[path];
+            continue;
         }
 
         const converted = applyConverter(converter, query[path]);
