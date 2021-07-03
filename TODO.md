@@ -3,6 +3,7 @@
 - Respect `unknownFields` policy for all relevant ops (create, update, replace, and list (filters))
 - Make all ops 'opt in' rather than opt out (will need to update test schemas in all test suites)
 - Implement authorization (just start writing types and see where it goes)
+- sort fields for `list` op!!!
 - Add run time logging!
 - Improve build time logging
 - Update buildPatchValidator to actually just build JSON Schema from base JSON schema

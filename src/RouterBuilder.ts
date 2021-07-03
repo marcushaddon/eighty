@@ -18,7 +18,7 @@ import { buildCreateValidationMiddleware } from "./validation/buildCreateValidat
 import { ensureAuthenticated } from "./auth";
 import { buildPatchValidationMiddleware } from "./validation/buildPatchValidator";
 import { buildListValidationMiddleware} from "./validation/buildListValidator";
-import { AuthorizationBuilder } from "./auth/authorization";
+import { buildAuthorization } from "./auth/authorization";
 
 
 
@@ -93,8 +93,7 @@ export class RouterBuilder {
         }
 
         if (operationConfig?.authorization) {
-            const authorizationBuilder = getAuthorizationBuilder(op);
-            const authorizationMW = authorizationBuilder(resource, operationConfig.authorization);
+            const authorizationMW = buildAuthorization(resource, operationConfig.authorization);
             middlewares.push(authorizationMW);
         }
 
@@ -168,8 +167,4 @@ const getValidationBuilder = (op: OperationName): ValidatorBuilder => {
     };
 
     return builders[op] || noValidationBuilder;
-};
-
-const getAuthorizationBuilder = (op: OperationName): AuthorizationBuilder => {
-
 };
