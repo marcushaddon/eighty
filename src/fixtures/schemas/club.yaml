@@ -1,0 +1,11 @@
+properties:
+  bookId:
+    type: string
+  userId:
+    type: string
+  title:
+    type: string
+  required:
+    - bookId
+    - userId
+    - title

@@ -18,7 +18,7 @@ type PostFetchCheck = (user: RequestUser, resource: EightyRecord) => Boolean;
 type CheckBuilder = (checkConfig: AuthorizationMethod) => { pre?: PreFetchCheck, post?: PostFetchCheck };
 
 const inGroup = (config: AuthorizationMethod) => ({
-    pre: (user: RequestUser) => {
+    pre: function inGroup(user: RequestUser) {
         const groupConfig = config as GroupAuthorization;
         const singleGroup = user.group === groupConfig.group;
         const multipleGroups = !!user.groups && user.groups.indexOf(groupConfig.group) > -1;
@@ -28,7 +28,7 @@ const inGroup = (config: AuthorizationMethod) => ({
 });
 
 const hasRole = (config: AuthorizationMethod) => ({
-    pre: (user: RequestUser) => {
+    pre: function hasRole(user: RequestUser) {
         const roleConfig = config as RoleAuthorization;
 
         const singleRole = user.role === roleConfig.role;
@@ -39,11 +39,11 @@ const hasRole = (config: AuthorizationMethod) => ({
 });
 
 const isResource = (config: AuthorizationMethod) => ({
-    post: (user: RequestUser, resource: EightyRecord) => user.id === resource.id,
+    post: function isResource(user: RequestUser, resource: EightyRecord) { return user.id === resource.id },
 })
 
 const isOwner = (config: AuthorizationMethod) => ({
-    post: (user: RequestUser, resource: EightyRecord) => user.id === resource.createdBy
+    post: function isOwner(user: RequestUser, resource: EightyRecord) { return user.id === resource.createdBy }
 })
 
 const checkBuilders: { [ checkType: string ]: CheckBuilder } = {
@@ -63,6 +63,7 @@ const explainPass = (
     mode: 'allOf' | 'anyOf'
 ): string => {
     return 'TODO';
+
 }
 
 const explainFail = (
@@ -70,19 +71,29 @@ const explainFail = (
     results: Boolean[],
     mode: 'allOf' | 'anyOf'
 ): string => {
-    return 'TODO';
+    const quantifier = mode === 'allOf' ? 'all' : 'one or more';
+    let explaination = `Failed to pass ${quantifier} auth checks. Failed: `;
+
+    const failed = checks
+        .map(check => `"${check.name}"`)
+        .filter((_, i) => !results[i])
+        .join(', ');
+
+    explaination += failed;
+
+    return explaination;
 }
 
 export const buildAuthorization = (resource: Resource, config: AuthorizationSchema): Handler => {
     const mode = 'allOf' in config ? 'allOf' : 'anyOf'; // We can assume only one is set
 
-    const checkFuncs = config[mode]!.map(check => checkBuilders[check.type](check));
+    const checkFuncs = config[mode]!.map(checkConfig => checkBuilders[checkConfig.type](checkConfig));
     const preChecks = checkFuncs.map(({ pre }) => pre).filter((check): check is PreFetchCheck => !!check);
     const postChecks = checkFuncs.map(({ post }) => post).filter((check): check is PostFetchCheck => !!check);
-
     
     const authorize: Handler = (req, res, next) => {
-        if (preChecks.length === 0) {
+        console.log('AUTHORIZIN!!!')
+        if (preChecks.length > 0) {
             const user = (req as any).user;
             const results = preChecks.map(check => check(user));
             const passPreCheck = results.reduce(mode === 'allOf' ? and : or);
@@ -104,6 +115,7 @@ export const buildAuthorization = (resource: Resource, config: AuthorizationSche
         }
 
         (req as any).authorizer = (user: RequestUser, resource: EightyRecord): Boolean => {
+            console.log('POST AUTHORIZIN');
             const results = postChecks.map(check => check(user, resource));
             const passPostCheck = results.reduce(mode === 'allOf' ? and : or);
             let explaination: string;

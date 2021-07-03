@@ -53,7 +53,7 @@ export const books = Array.from(Array(10).keys())
             name: 'Willy Shakespea' + 'r'.repeat(i),
             age: 5 * i,
         }
-    }))
+    }));
 
 let mongo: MongoClient;
 let db: Db;
@@ -65,6 +65,7 @@ export const buildMongoFixtures = async () => {
 
     await db.createCollection('users');
     await db.createCollection('books');
+    await db.createCollection('clubs');
 
     const usersRes = await Promise.all(users.map(u => db.collection('users').insertOne(u)));
     const mockUsers = usersRes.map(res => res.ops[0]);
@@ -78,6 +79,7 @@ export const cleanupMongoFixtures = async () => {
     if (!mongo) return;
     await db.dropCollection('users');
     await db.dropCollection('books');
+    await db.dropCollection('clubs')
     await mongo.close();
 };
 

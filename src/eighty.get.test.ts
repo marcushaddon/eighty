@@ -4,10 +4,6 @@ import { eighty } from './eighty';
 import { buildMongoFixtures, cleanupMongoFixtures } from './fixtures'; 
 import { mockAuthenticator } from './fixtures/mockAuth';
 
-const mockService = {
-    getOne() { return [{ name: 'test-user' }]}
-}
-
 describe('getOne', () => {
     ['mongodb'].forEach(db => {
         let fixtures: any;
@@ -86,5 +82,7 @@ describe('getOne', () => {
                     expect(res.body.id).toEqual(existingId.toString());
                 });
         });
+
+        
     });
 });
