@@ -32,8 +32,9 @@ export const AuthorizationMethodValidator = rt.Union(
 );
 export type AuthorizationMethod = rt.Static<typeof AuthorizationMethodValidator>;
 
+// TODO: need to manually enforce that one and only one is present
 export const AuthorizationSchemaValidator = rt.Record({
     allOf: rt.Optional(rt.Array(AuthorizationMethodValidator).withConstraint(val => val.length > 0)),
     anyOf: rt.Optional(rt.Array(AuthorizationMethodValidator).withConstraint(val => val.length > 0)),
 });
-export type AuthorizationSchema = rt.Static<typeof AuthorizationMethodValidator>;
+export type AuthorizationSchema = rt.Static<typeof AuthorizationSchemaValidator>;

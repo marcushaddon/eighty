@@ -1,5 +1,5 @@
 import * as rt from 'runtypes';
-import { Unknown } from 'runtypes';
+import { AuthorizationSchemaValidator } from './authorization';
 
 export const OperationNameValidator = rt.Union(
     rt.Literal('list'),
@@ -20,8 +20,12 @@ export const UnknownFieldsPolicyValidator = rt.Union(
 
 export type UnknownFieldsPolicy = rt.Static<typeof UnknownFieldsPolicyValidator>;
 
+// TODO: Maybe need to manully handle illogical cominations of authentication + authorization
+// Idea: instead of making them optional, make them union of their type | boolean
+// and force them to opt out by supplying false!!
 export const OperationValidator = rt.Record({
     authentication: rt.Optional(rt.Boolean),
+    authorization: rt.Optional(AuthorizationSchemaValidator),
     unknownFieldsPolicy: rt.Optional(UnknownFieldsPolicyValidator)
 });
 

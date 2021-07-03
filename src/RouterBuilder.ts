@@ -18,6 +18,7 @@ import { buildCreateValidationMiddleware } from "./validation/buildCreateValidat
 import { ensureAuthenticated } from "./auth";
 import { buildPatchValidationMiddleware } from "./validation/buildPatchValidator";
 import { buildListValidationMiddleware} from "./validation/buildListValidator";
+import { AuthorizationBuilder } from "./auth/authorization";
 
 
 
@@ -90,7 +91,13 @@ export class RouterBuilder {
         if (operationConfig?.authentication) {
             middlewares.push(ensureAuthenticated);
         }
-        // TODO: Resolve authorization middleware?
+
+        if (operationConfig?.authorization) {
+            const authorizationBuilder = getAuthorizationBuilder(op);
+            const authorizationMW = authorizationBuilder(resource, operationConfig.authorization);
+            middlewares.push(authorizationMW);
+        }
+
         // Resolve validation middleware (TODO: if there is no schema we still need to parse pagination params)
         if (resource.schemaPath) {
             const validationBuilder = getValidationBuilder(op);
@@ -161,4 +168,8 @@ const getValidationBuilder = (op: OperationName): ValidatorBuilder => {
     };
 
     return builders[op] || noValidationBuilder;
-}
+};
+
+const getAuthorizationBuilder = (op: OperationName): AuthorizationBuilder => {
+
+};
