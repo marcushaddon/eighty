@@ -7,6 +7,8 @@ import { ValidatorBuilder } from ".";
 const filterPageFields = (fields: any) => {
     delete fields['count'];
     delete fields['skip'];
+    delete fields['sort'];
+    delete fields['order'];
 
     return fields;
 }
@@ -14,13 +16,19 @@ const filterPageFields = (fields: any) => {
 export const buildListValidationMiddleware: ValidatorBuilder = (resource: Resource): Handler => {
     // BOOKMARK
     const validateListParams: Handler = (req, res, next) => {
-        console.log(req.query, 'QUERY');
         const queryParams = req.query;
-        const { count: countParam, skip: skipParam } = queryParams;
+        const {
+            count: countParam,
+            skip: skipParam,
+            sort,
+            order
+        } = queryParams;
         const count = countParam && parseInt(countParam as string) || 20;
         const skip = skipParam && parseInt(skipParam as string) || 0;
         (req as any).count = count;
         (req as any).skip = skip;
+        (req as any).sort = sort;
+        (req as any).order = order;
 
         const filteredFitlers = filterPageFields(queryParams);
         const policy = resource.operations?.list?.unknownFieldsPolicy || 'reject';

@@ -35,3 +35,12 @@ export const mockAuthenticator: Handler = (req, res, next) => {
     (req as any).user = users[mockToken];
     next();
 };
+
+export const fixtureAuthenticator = (userFixtures: { name: string, _id: any }[]): Handler => (req, res, next) => {
+    const mockToken = (req.headers['authorization'] || 'NONE') as string;
+    const users: { [ name: string ]: { name: string, id: string } } = {};
+    userFixtures.forEach(user => users[user.name] = { ...user, id: user._id.toString() });
+
+    (req as any).user = users[mockToken];
+    next();
+}

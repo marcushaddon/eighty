@@ -15,3 +15,13 @@ export class BadRequestError extends Error {
         this.message = message;
     }
 }
+
+export class AuthorizationError extends Error {
+    status = 403;
+    message = 'Forbidden';
+
+    constructor(message = 'Forbidden') {
+        super();
+        this.message = message;
+    }
+}

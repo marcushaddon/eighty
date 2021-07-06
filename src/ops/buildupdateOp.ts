@@ -12,7 +12,7 @@ export const buildUpdateOp: OpBuilder = ({ resource, db }): Handler => {
         // TODO: if req.authorizer, fetch and check (or in future resolve authorization query clause)
         if ((req as any).authorizer) {
             // TODO: Resolve a query clause to achieve the same thing with one less query
-            const resourceInstance = db.getById(resource, resourceId);
+            const resourceInstance = await db.getById(resource, resourceId);
             try {
                 (req as any).authorizer((req as any).user, resourceInstance);
             } catch (e) {

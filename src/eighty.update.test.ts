@@ -22,6 +22,8 @@ describe('update', () => {
               - name: book
                 schemaPath: ./src/fixtures/schemas/book.yaml
                 operations:
+                  getOne:
+                    authentication: false
                   update:
                     authentication: true
                     unknownFieldsPolicy: allow

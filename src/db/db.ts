@@ -11,6 +11,8 @@ export type ListOps = {
     resource: Resource,
     count?: number | undefined,
     skip?: number | undefined,
+    sort: string,
+    order?: 'ASC' | 'DESC'
     filters?: { }
 }
 

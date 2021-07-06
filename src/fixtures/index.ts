@@ -4,7 +4,7 @@ import { Db, MongoClient } from "mongodb";
 
 export const users = [
     {
-        name: "a",
+        name: "userA",
         age: 10,
         score: 20,
         config: {
@@ -12,7 +12,7 @@ export const users = [
         }
     },
     {
-        name: "b",
+        name: "userB",
         age: 20,
         score: 20,
         config: {
@@ -20,7 +20,7 @@ export const users = [
         }
     },
     {
-        name: "c",
+        name: "userC",
         age: 30,
         score: 100,
         config: {
@@ -28,7 +28,7 @@ export const users = [
         }
     },
     {
-        name: "d",
+        name: "userD",
         age: 40,
         score: 200,
         config: {
@@ -36,13 +36,20 @@ export const users = [
         }
     },
     {
-        name: "e",
+        name: "userE",
         age: 50,
         score:3100,
         config: {
             nickname: 'eNickname'
         }
     },
+    {
+        name: "adminUser",
+        age: 30,
+        score: 1240,
+        role: "admin"
+    },
+
 ];
 
 export const books = Array.from(Array(10).keys())

@@ -24,6 +24,9 @@ describe('getOne', () => {
                 resources:
                   - name: user
                     schemaPath: ./src/fixtures/schemas/user.yaml
+                    operations:
+                      getOne:
+                        authentication: false
                   - name: book
                     operations:
                       getOne:
@@ -45,7 +48,7 @@ describe('getOne', () => {
 
 
         it(`${db}: gets existing resource`, async () => {
-            const existingId = fixtures.users[0]._id;
+            const existingId = fixtures.users[0]._id.toString();
 
             await request(uut)
             .get(`/users/${existingId}`)

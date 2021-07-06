@@ -11,3 +11,18 @@
 - Create eightySchema to OpenAPI builder (serve it at configurable docs route, but also expose generated docs in return from eighty so they can be merged with bespoke api docs. also expose this builder at root of package so it can be used to create 'live' demo in browser)
 - Fail eighty schema validation on unknown fields
 - [in] notation for filtering on id fields is broken
+
+
+## Authorization testing
+variables:
+- userIsInAuthorizedGroup
+- userHasAuthorizedRole
+- userIsInIrrelevantGroup
+- userHasIrreleventRole
+- userIsResource
+- userOwnsResource
+- rolePolicySet
+- groupPolicySet
+- identityPolicySet
+- ownershipPolicySet
+- allOfOperator

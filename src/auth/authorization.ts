@@ -3,6 +3,7 @@ import { Handler } from "express";
 import { AuthorizationSchema, AuthorizationMethod, GroupAuthorization, RoleAuthorization } from "../types/authorization";
 import { EightyRecord } from "../types/database";
 import { Resource } from "../types/resource";
+import { AuthorizationError } from "../errors";
 
 type RequestUser = {
     id: string;
@@ -62,8 +63,17 @@ const explainPass = (
     results: Boolean[],
     mode: 'allOf' | 'anyOf'
 ): string => {
-    return 'TODO';
+    const quantifier = mode === 'allOf' ? 'all' : 'one or more';
+    let explaination = `Passed ${quantifier} auth checks. Passed: `;
 
+    const passed = checks
+        .map(check => `"${check.name}"`)
+        .filter((_, i) => results[i])
+        .join(', ');
+
+    explaination += passed;
+
+    return explaination;
 }
 
 const explainFail = (
@@ -92,7 +102,6 @@ export const buildAuthorization = (resource: Resource, config: AuthorizationSche
     const postChecks = checkFuncs.map(({ post }) => post).filter((check): check is PostFetchCheck => !!check);
     
     const authorize: Handler = (req, res, next) => {
-        console.log('AUTHORIZIN!!!')
         if (preChecks.length > 0) {
             const user = (req as any).user;
             const results = preChecks.map(check => check(user));
@@ -104,7 +113,6 @@ export const buildAuthorization = (resource: Resource, config: AuthorizationSche
                 explaination = explainFail(preChecks, results, mode);
             }
 
-            console.log(explaination);
             if (!passPreCheck) {
                 return res.status(403).send({ message: explaination }).end();
             }
@@ -114,20 +122,23 @@ export const buildAuthorization = (resource: Resource, config: AuthorizationSche
             next();
         }
 
-        (req as any).authorizer = (user: RequestUser, resource: EightyRecord): Boolean => {
-            console.log('POST AUTHORIZIN');
+        (req as any).authorizer = (user: RequestUser, resource: EightyRecord) => {
             const results = postChecks.map(check => check(user, resource));
             const passPostCheck = results.reduce(mode === 'allOf' ? and : or);
+
             let explaination: string;
             if (passPostCheck) {
                 explaination = explainPass(postChecks, results, mode);
             } else {
                 explaination = explainFail(postChecks, results, mode);
             }
-
-            console.log(explaination);
-            return passPostCheck;
+        
+            if (!passPostCheck) {
+                throw new AuthorizationError(`Forbidden: ${explaination}`);
+            }
         }
+
+        next();
     };
 
     return authorize;

@@ -12,7 +12,6 @@ import { ValidatorProvider } from "./ValidatorProvider";
 // TODO: Put this in file specific to list validation/parsing
 // TODO: This should be middleware
 export const correctTypes = (query: ParsedQs, resource: Resource, unknownFieldPolicy: UnknownFieldsPolicy): ParsedQs => {
-    console.log(query, 'CORRECTING THIS');
     const validator = ValidatorProvider.getValidator(resource);
     if (!validator) {
         // TODO: Maybe we should throw if unknownFieldsPolicy: reject? hmm

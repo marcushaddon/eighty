@@ -35,15 +35,21 @@ export class MongoDbClient implements IDBClient {
         resource,
         skip = 0,
         count = 20,
+        sort,
+        order = 'ASC',
         filters = {}
     }: ListOps): Promise<PaginatedResponse> {
-        console.log(filters, 'OUR FILTERS');
         const translatedFilters = translateFilters(filters);
-        console.log(translatedFilters, 'OUR TRANSLATED FILERS');
 
-        const baseQuery = this.db
+        let baseQuery = this.db
             ?.collection(resource.name + 's')
             .find(translatedFilters)
+
+        if (sort) {
+            const orderParam = order === 'ASC' ? 1 : -1;
+            baseQuery = baseQuery
+                ?.sort({ [sort]: orderParam });
+        }
         
         const res = await baseQuery!
             .skip(skip)
@@ -149,11 +155,8 @@ export const translateFilters = (parsedQueryString: ParsedQs) => {
     const keyVals = Object.entries(parsedQueryString);
     
     for (let [ key, val ] of keyVals) {
-        console.log(key, val, 'TRANSLATING THIS');
         if (key === 'id') {
-            console.log('ITS AN ID FIELD');
             filters['_id'] = mapIdVals(val as string | string[]);
-            console.log(filters, 'AFTER MAPPING ID FIELD');
         } else if (typeof val === 'string') {
             filters[key] = val;
         } else if (Array.isArray(val)) {

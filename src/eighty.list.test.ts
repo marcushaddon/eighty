@@ -75,8 +75,9 @@ describe('list', () => {
         });
             
         it(`${db}: skips results`, async () => {
+            const skip = fixtures.users.length - 3;
             await request(uut)
-                .get('/users?skip=2')
+                .get(`/users?skip=${skip}`)
                 .send()
                 .expect(200)
                 .expect(res2 => {
@@ -166,7 +167,30 @@ describe('list', () => {
             await request(uut)
                 .get('/books?notInSchema[gt]=aaa')
                 .set({ Authorization: 'userA' })
+                .send()
                 .expect(200);
+        });
+
+        it(`${db}: sorts and orders`, async () => {
+            await request(uut)
+                .get('/users?sort=name&order=ASC')
+                .send()
+                .expect(200)
+                .expect(res => {
+                    const first = res.body.results[0];
+                    const last = res.body.results[res.body.results.length-1];
+                    expect(first.name <= last.name).toBeTruthy();
+                });
+            
+                await request(uut)
+                    .get('/users?sort=name&order=DESC')
+                    .send()
+                    .expect(200)
+                    .expect(res => {
+                        const first = res.body.results[0];
+                        const last = res.body.results[res.body.results.length-1];
+                        expect(first.name >= last.name).toBeTruthy();
+                    });
         })
     });
 });

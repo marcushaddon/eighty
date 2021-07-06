@@ -19,6 +19,7 @@ import { ensureAuthenticated } from "./auth";
 import { buildPatchValidationMiddleware } from "./validation/buildPatchValidator";
 import { buildListValidationMiddleware} from "./validation/buildListValidator";
 import { buildAuthorization } from "./auth/authorization";
+import { buildDocs } from "./documentation";
 
 
 
@@ -50,7 +51,10 @@ export class RouterBuilder {
             if (!validator) continue;
     
             ValidatorProvider.register(resource.schemaPath, validator);
-        }
+        };
+
+        const docs = this.buildDocs(this.schema);
+        // TODO: register route?
     
         const resourceRoutes = resources
             .map(resource => this.createRoutes(resource));
@@ -75,7 +79,11 @@ export class RouterBuilder {
         // const specifiedOps = Object.keys(resource.operations || [] as string[]);
     
         // TODO: make this opt in?
-        const routes = Operations.map(op => this.buildRoute(op, resource));
+        const routes = resource.operations ? (
+            Object.keys(resource.operations).map(
+                op => this.buildRoute(op as OperationName, resource)
+            )
+        ) : [];
     
         return routes;
     };
@@ -97,13 +105,12 @@ export class RouterBuilder {
             middlewares.push(authorizationMW);
         }
 
-        // Resolve validation middleware (TODO: if there is no schema we still need to parse pagination params)
         if (resource.schemaPath) {
             const validationBuilder = getValidationBuilder(op);
             const validationMW = validationBuilder(resource);
             middlewares.push(validationMW);
         }
-        // Resolve op middleware (might need to apply authorization)
+
         const opBuilder = getOpBuilder(op);
 
         const opMW = opBuilder({
@@ -118,7 +125,11 @@ export class RouterBuilder {
             method: opMethods[op],
             handler: middlewares
         };
-    };
+    }
+
+    private buildDocs(schema: EightySchema) {
+        return buildDocs(schema);
+    }
 }
 
 // TODO: maybe this should be with ops

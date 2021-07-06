@@ -12,12 +12,20 @@ export const buildListOp: OpBuilder = ({
     db: IDBClient,
 }): Handler => {
     const list: Handler = async (req, res, next) => {
-        const { count, skip, filters } = req as any;
+        const {
+            count,
+            skip,
+            filters,
+            sort,
+            order
+        } = req as any;
 
         const params = {
             resource,
             count,
             skip,
+            sort,
+            order: order ? order.toUpperCase() : order,
             filters,
         };
 
