@@ -5,6 +5,7 @@ import { DatabaseValidator } from './database';
 
 export const EightySchemaValidator = rt.Record({
     version: rt.String,
+    name: rt.Optional(rt.String),
     // authentication: rt.Optional(AuthenticationValidator),
     database: DatabaseValidator,
     resources: rt.Array(ResourceValidator),

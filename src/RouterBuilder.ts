@@ -1,9 +1,11 @@
 import { Handler } from "express";
+import OpenApi from 'swagger-ui-express';
 import { Resource } from "./types/resource";
 import { OperationName } from "./types/operation";
 import { HttpMethod, Operations, opMethods } from "./const/operations";
 import { EightySchema } from "./types/schema";
 import { IDBClient, resolveDbClient } from "./db/db";
+import { getRoute } from "./util";
 import { loadSchema } from "./buildResourceSchemas";
 import { buildCreateOp } from "./ops/buildCreateOp";
 import { buildReplaceOp } from "./ops/buildReplaceOp";
@@ -52,9 +54,6 @@ export class RouterBuilder {
     
             ValidatorProvider.register(resource.schemaPath, validator);
         };
-
-        const docs = this.buildDocs(this.schema);
-        // TODO: register route?
     
         const resourceRoutes = resources
             .map(resource => this.createRoutes(resource));
@@ -62,11 +61,23 @@ export class RouterBuilder {
         const flattened = resourceRoutes
             .reduce((acc, current) => [ ...acc, ...current ]);
         
+        const docsRouteHandlers: RouteHandler[] = [{
+            method: 'use' as HttpMethod,
+            route: '/docs',
+            handler: OpenApi.serve,
+        }, {
+            method: 'get',
+            route: '/docs',
+            handler: [OpenApi.setup(this.buildDocs(this.schema))]
+        }];
+
+        const withDocs = [ ...flattened, ...docsRouteHandlers ];
+        
         // TODO: just manage this in db
         const init = this.db.connect.bind(this.db);
         const tearDown = this.db.disconnect.bind(this.db);
     
-        return { routesAndHandlers: flattened, init, tearDown };
+        return { routesAndHandlers: withDocs, init, tearDown };
     };
 
     /**
@@ -120,8 +131,10 @@ export class RouterBuilder {
 
         middlewares.push(opMW);
 
+        const { expressRoute } = getRoute(op, resource);
+
         return {
-            route: getRoute(op, resource.name),
+            route: expressRoute,
             method: opMethods[op],
             handler: middlewares
         };
@@ -130,12 +143,6 @@ export class RouterBuilder {
     private buildDocs(schema: EightySchema) {
         return buildDocs(schema);
     }
-}
-
-// TODO: maybe this should be with ops
-const getRoute = (op: OperationName, resourceName: string): string => {
-    if (op === 'list' || op === 'create') return `/${resourceName}s`;
-    return `/${resourceName}s/:id`;
 }
 
 // TODO: move these to ops/

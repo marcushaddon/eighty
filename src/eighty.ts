@@ -19,10 +19,10 @@ type EightyOpts = {
     schemaPath?: string,
 };
 
-const readFile = (fp: string) => fs.readFileSync(fp).toString();
+export const readFile = (fp: string) => fs.readFileSync(fp).toString();
 
 
-const parseSchema = (contents: string): EightySchema => {
+export const parseSchema = (contents: string): EightySchema => {
     const parsed = yaml.parse(contents);
 
     return EightySchemaValidator.check(parsed);

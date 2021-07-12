@@ -22,7 +22,7 @@ export const opMethods: { [ key in OperationName ]: HttpMethod } = {
     'list': 'get',
     'getOne': 'get',
     'create': 'post',
-    'createOrReplace': 'put',
+    // 'createOrReplace': 'put',
     'replace': 'put',
     'update': 'patch',
     'delete': 'delete',

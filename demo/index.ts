@@ -5,7 +5,7 @@ const {
     tearDown,
     router: crudServer
 } = eighty({
-    schemaPath: './demo.yaml',
+    schemaPath: './demo/demo.yaml',
 });
 
 (async () => {
