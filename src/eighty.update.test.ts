@@ -301,9 +301,56 @@ describe('update', () => {
         });
 
         // Book 9
+        // TODO: This may be mongo specific!!!!
+        it(`${db}: peforms valid ADDs on array field`, async () => {
+            const book = fixtures.books[9];
+            const url = `/books/${book._id.toString()}`;
 
-        it.skip(`${db}: rejects all ops if one fails`, async () => {
-            // Not sure how to implement this
-        })
+            await request(uut)
+                .patch(url)
+                .set({ Authorization: 'userA' })
+                .send([
+                    { op: 'add', path: '/themes/0', value: 'being first' }
+                ]).expect(200)
+
+            await request(uut)
+                .get(url)
+                .set({ Authorization: 'userA' })
+                .expect(res => {
+                    expect(res.body.themes[0]).toEqual('being first');
+                    expect(res.body.themes[1]).toEqual(book.themes[0]);
+                });
+            
+            await request(uut)
+                .patch(url)
+                .set({ Authorization: 'userA' })
+                .send([
+                    { op: 'add', path: '/themes/-', value: 'end value' }
+                ]).expect(200);
+            
+            await request(uut)
+                .get(url)
+                .set({ Authorization: 'userA' })
+                .send()
+                .expect(res => {
+                    expect(res.body.themes[res.body.themes.length-1]).toEqual('end value');
+                    expect(res.body.themes[0]).toEqual('being first');
+                })
+        });
+
+        // TODO: Find suite of tests for PATCH standard?
+
+        // Book 10
+        it(`${db}: rejects invalid replace op on array field`, async () => {
+            const book = fixtures.books[10];
+            const url = `/books/${book._id.toString()}`;
+
+            await request(uut)
+                .patch(url)
+                .set({ Authorization: 'userA' })
+                .send([
+                    { op: 'replace', path: '/themes/0', value: 5 }
+                ]).expect(400);
+        });
     });
 })

@@ -52,14 +52,15 @@ export const users = [
 
 ];
 
-export const books = Array.from(Array(10).keys())
+export const books = Array.from(Array(20).keys())
     .map(i => ({
         title: `Test Book ${i}`,
         pages: 10 * i,
         author: {
             name: 'Willy Shakespea' + 'r'.repeat(i),
             age: 5 * i,
-        }
+        },
+        themes: [ 'theme1', 'theme2' ]
     }));
 
 let mongo: MongoClient;

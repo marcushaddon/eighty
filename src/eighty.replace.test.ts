@@ -134,5 +134,33 @@ describe('replace', () => {
                 .send()
                 .expect(res => expect(res.body).toEqual(expected));
         });
+
+        it(`${db}: performds valid replace with nested array fields`, async () => {
+            const url = `/books/${fixtures.books[0]._id.toString()}`;
+            await request(uut)
+                .put(url)
+                .send({
+                    title: 'new title',
+                    pages: 3452,
+                    author: {
+                        name: 'new name',
+                    },
+                    themes: [ 'replacing things' ]
+                }).expect(200);
+        });
+
+        it(`${db}: rejects invalid replace with nested array fields`, async () => {
+            const url = `/books/${fixtures.books[0]._id.toString()}`;
+            await request(uut)
+                .put(url)
+                .send({
+                    title: 'new title',
+                    pages: 3452,
+                    author: {
+                        name: 'new name',
+                    },
+                    themes: [ 'replacing things', 5 ]
+                }).expect(400);
+        });
     });
 });

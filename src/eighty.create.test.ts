@@ -1,4 +1,5 @@
 import express, { Express } from 'express';
+import { send } from 'process';
 import request from 'supertest';
 import { eighty } from './eighty';
 import { buildMongoFixtures, cleanupMongoFixtures } from './fixtures';
@@ -71,6 +72,35 @@ describe('create', () => {
                 .send({
                     name: 'invalid',
                     age: 'cool-user'
+                }).expect(400);
+        });
+
+        it(`${db}: validates array field`, async () => {
+            await request(uut)
+                .post('/books')
+                .set({ Authorization: 'userA' })
+                .send({
+                    title: 'test',
+                    pages: 100,
+                    author: {
+                        name: 'test author',
+                    },
+                    themes: [ 'technology' ]
+                }).expect(201);
+        });
+
+        it(`${db}: invalidates array field`, async () => {
+            await request(uut)
+                .post('/books')
+                .set({ Authorization: 'userA' })
+                .send({
+                    title: 'test',
+                    pages: 100,
+                    author: {
+                        name: 'test',
+                        age: 345
+                    },
+                    themes: [ 'technology', { name: 'the future' }]
                 }).expect(400);
         });
 

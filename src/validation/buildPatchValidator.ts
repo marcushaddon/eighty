@@ -5,7 +5,6 @@ import { ValidatorBuilder } from "./index";
 import { UnknownFieldsPolicy } from "../types/operation";
 import { Resource } from "../types/resource";
 import { ValidatorProvider } from "./ValidatorProvider";
-import { patch } from "superagent";
 
 export const buildPatchValidationMiddleware: ValidatorBuilder = (resource: Resource) => {
     const validator = ValidatorProvider.getValidator(resource);

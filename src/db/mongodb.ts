@@ -111,7 +111,8 @@ export class MongoDbClient implements IDBClient {
                 results.push(applyOperation(existing, op));
             } catch (e) {
                 if (e.name === 'TEST_OPERATION_FAILED') return;
-                throw new BadRequestError('Encountered error applying patch');
+                console.error(e.name, e.message, ops);
+                throw new BadRequestError(`Encountered ${e.name} applying patch: ${e.message}`);
             }
         }
 
