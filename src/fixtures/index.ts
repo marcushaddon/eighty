@@ -9,7 +9,8 @@ export const users = [
         score: 20,
         config: {
             nickname: 'aNickname'
-        }
+        },
+        interests: [ 'reading', 'writing' ],
     },
     {
         name: "userB",
@@ -17,7 +18,8 @@ export const users = [
         score: 20,
         config: {
             nickname: 'bNickname'
-        }
+        },
+        interests: [ 'writing', 'arithmetic', ]
     },
     {
         name: "userC",
@@ -25,7 +27,8 @@ export const users = [
         score: 100,
         config: {
             nickname: 'cNickname'
-        }
+        },
+        interests: [ 'reading', 'writing', 'arithmetic', 'art' ]
     },
     {
         name: "userD",

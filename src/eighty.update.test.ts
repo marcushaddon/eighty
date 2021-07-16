@@ -3,10 +3,11 @@ import request from 'supertest';
 import { eighty } from './eighty';
 import { mockAuthenticator } from './fixtures/mockAuth';
 import { buildMongoFixtures, cleanupMongoFixtures } from './fixtures';
-import { boolOptions } from 'yaml/types';
+import { EightyRouter } from './types/plugin';
 
 describe('update', () => {
     ['mongodb'].forEach(db => {
+        let eightyRouter: EightyRouter;
         let uut: Express;
         let fixtures: any;
         let teardown: () => Promise<void>;
@@ -35,6 +36,8 @@ describe('update', () => {
             const { router, init, tearDown } = await eighty({
                 schemaRaw: testSchema,
             });
+
+            eightyRouter = router;
 
             teardown = tearDown;
             uut.use(router);
@@ -278,6 +281,7 @@ describe('update', () => {
                 .expect(200)
                 .expect(res => expect(res.body.title).toEqual(book.title));
         })
+
         // Book 8
         it(`${db}: it applies multiple valid ops`, async () => {
             const book = fixtures.books[8];
@@ -301,7 +305,6 @@ describe('update', () => {
         });
 
         // Book 9
-        // TODO: This may be mongo specific!!!!
         it(`${db}: peforms valid ADDs on array field`, async () => {
             const book = fixtures.books[9];
             const url = `/books/${book._id.toString()}`;
@@ -351,6 +354,32 @@ describe('update', () => {
                 .send([
                     { op: 'replace', path: '/themes/0', value: 5 }
                 ]).expect(400);
+        });
+
+        // Book 11
+        it(`${db}: correctly calls success callbacks`, async () => {
+            const book = fixtures.books[11];
+            const url = `/books/${book._id.toString()}`;
+
+            const mockFn = jest.fn();
+
+            eightyRouter
+                .resources('book')
+                .ops('update')
+                .onSuccess(req => {
+                    mockFn(req.resource);
+                });
+
+            await request(uut)
+                .patch(url)
+                .set({ Authorization: 'userA' })
+                .send([
+                    { op: 'add', path: '/themes/0', value: 'callbacks' }
+                ]).expect(200)
+                .expect(res => {
+                    expect(mockFn).toHaveBeenCalledTimes(1);
+                    expect(mockFn.mock.calls[0][0]).toEqual(res.body);
+                });
         });
     });
 })

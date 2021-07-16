@@ -9,19 +9,21 @@ import { BadRequestError } from "../errors";
 import { UnknownFieldsPolicy } from "../types/operation";
 import { ValidatorProvider } from "./ValidatorProvider";
 
+type FieldType = 'string' | 'number' | 'array'; // TODO: additional types from JSON schema
+
 // TODO: Put this in file specific to list validation/parsing
 // TODO: This should be middleware
 export const correctTypes = (query: ParsedQs, resource: Resource, unknownFieldPolicy: UnknownFieldsPolicy): ParsedQs => {
     const validator = ValidatorProvider.getValidator(resource);
     if (!validator) {
-        // TODO: Maybe we should throw if unknownFieldsPolicy: reject? hmm
+
         return query;
     }
-    const corrected: { [ key: string ]: any} = {};
+    const corrected: { [ key: string ]: any } = {};
     // parse dotted paths into schema path style
     for (const path in query) {
         const translated = dottedToSchemaPath(path, resource.name);
-        const fieldType = validator.schemas[translated]?.type as string;
+        const fieldType = validator.schemas[translated]?.type as FieldType;
 
         const converter = CONVERTERS[fieldType];
         if (!converter) {
@@ -36,6 +38,12 @@ export const correctTypes = (query: ParsedQs, resource: Resource, unknownFieldPo
         }
 
         const converted = applyConverter(converter, query[path]);
+
+        if (converted !== null && typeof converted === 'object') {
+            // TODO: This means the value is an 'operator' like [in] or [gte]
+            // so we need to make sure this operator makes sense for the type
+            Object.keys(converted).forEach(op => checkOpForType(op, fieldType));
+        }
 
         corrected[path] = converted;
     }
@@ -68,5 +76,19 @@ const applyConverter = (converter: (arg: any) => any, val: any) => {
 const CONVERTERS: { [ fieldType: string ]: (arg: any) => any } = {
     number: parseFloat,
     string: val => val.toString(),
-    // TODO: additional types
+    array: val => val
+    // TODO: additional types (float, etc)
 };
+
+const TYPE_OP_MAP = {
+    string: new Set(['gt', 'gte', 'lt', 'lte', 'like', 'contains', 'in']),
+    number: new Set(['gt', 'gte', 'lt', 'lte', 'in']),
+    array: new Set(['contains']),
+    // TODO: additional types (float, etc)
+}
+
+const checkOpForType = (filter: string, fieldType: FieldType) => {
+    if (!TYPE_OP_MAP[fieldType].has(filter)) {
+        throw new BadRequestError(`Filter "${filter}" not applicable to field of type "${fieldType}`);
+    }
+}

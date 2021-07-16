@@ -2,6 +2,7 @@ import { IDBClient } from "../db/db";
 import { Resource } from "../types/resource";
 import { Handler } from "express";
 import { createWriteStream } from "fs";
+import { runInNewContext } from "vm";
 
 export const buildCreateOp = ({
     resource,
@@ -12,15 +13,18 @@ export const buildCreateOp = ({
 }): Handler => {
     const create: Handler = async (req, res, next) => {
         const pending = req.body;
+        (req as any).resource = pending;
 
         if ((req as any).authorizer) {
             try {
                 (req as any).authorizer((req as any).user, pending);
             } catch (e) {
-                return res
+                (req as any).error = e;
+                res
                     .status(e.status)
                     .json({ message: e.message })
                     .end();
+                next();
             }
         }
 
@@ -31,9 +35,12 @@ export const buildCreateOp = ({
 
         const created = await db.create(resource, pending, createdBy);
 
-        return res.status(201)
+        res.status(201)
             .json(created)
             .end();
+        
+        (req as any).resource = created;
+        return next();
     };
 
     return create;

@@ -8,20 +8,21 @@ import { UnknownFieldsPolicy } from "../types/operation";
 export const buildUpdateOp: OpBuilder = ({ resource, db }): Handler => {
     const update: Handler = async (req, res, next) => {
         const resourceId = req.params.id;       
-        
-        // TODO: if req.authorizer, fetch and check (or in future resolve authorization query clause)
+
         if ((req as any).authorizer) {
             // TODO: Resolve a query clause to achieve the same thing with one less query
             const resourceInstance = await db.getById(resource, resourceId);
             try {
                 (req as any).authorizer((req as any).user, resourceInstance);
             } catch (e) {
-                return res.status(403)
+                (req as any).error = e;
+                res.status(403)
                     .send({ message: e.message })
                     .end();
+                return next();
             }
         }
-        // TODO: apply patch op to db
+
         let result: any;
         try {
             result = await db.update(
@@ -31,15 +32,19 @@ export const buildUpdateOp: OpBuilder = ({ resource, db }): Handler => {
                 (req as any).user.id
             );
         } catch (e) {
-            return res.status(e.status)
-                .send({ message: e.message })
+            (req as any).error = e;
+            res.status(e.status || 500)
+                .send({ message: e.message || 'Internal server error' })
                 .end();
+            return next();
         }
 
+        (req as any).resource = result;
 
-        return res.status(200)
+        res.status(200)
             .send(result)
             .end();
+        return next();
     };
 
     return update;

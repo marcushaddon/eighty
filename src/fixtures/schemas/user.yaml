@@ -8,6 +8,10 @@ properties:
     required: true
   score:
     type: number
+  interests:
+    type: array
+    items:
+      type: string
   config:
     type: object
     properties:

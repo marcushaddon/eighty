@@ -4,7 +4,9 @@ import { json } from 'body-parser';
 import express, { Handler } from 'express';
 import { EightySchema, EightySchemaValidator } from './types/schema';
 import { RouterBuilder } from './RouterBuilder';
-import { boolOptions } from 'yaml/types';
+import { buildChecklist } from './documentation';
+import { OperationName } from './types/operation';
+import { EightyRouter, OpSubscriber, ResourceFinder } from './types/plugin';
 
 type EightyOpenApiHandler = {
     route: string;
@@ -59,7 +61,52 @@ export const eighty = (opts: EightyOpts) => {
         router[method](route, ...handler);
     }
 
+    // This should maybe happen after registering 'plugins'
     console.table(middlewareReport);
 
-    return { init, tearDown, router };
+    const devChecklist = buildChecklist(schema);
+    console.table(devChecklist);
+
+    const resourceFinder: ResourceFinder<any> = (resourceName: string) => {
+        const resource = schema.resources.find(rec => rec.name === resourceName);
+        if (typeof resource === 'undefined') {
+            throw new Error(`Eighty: unknown resource: ${resourceName}`);
+        }
+
+        return {
+            ops: (op: OperationName) => {
+                if (!resource.operations || !(op in resource.operations)) {
+                    throw new Error(`Error registering op callback, operation ${op} not specified for resource "${name}"`);
+                }
+
+                const subscriber: OpSubscriber<any> = {} as OpSubscriber<any>;
+                subscriber.onSuccess = cb => {
+                    routerBuilder.registerSuccessCallback(
+                        resourceName,
+                        op,
+                        cb
+                    );
+                    return subscriber;
+                };
+                subscriber.onFailure = cb => {
+                    routerBuilder.registerFailureCallback(
+                        resourceName,
+                        op,
+                        cb,
+                    )
+                    return subscriber;
+                }
+
+                return subscriber;
+            }
+        }
+    }
+
+    (router as any).resources = resourceFinder;
+
+    return {
+        init,
+        tearDown,
+        router: router as EightyRouter
+    };
 };

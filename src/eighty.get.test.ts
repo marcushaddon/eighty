@@ -3,10 +3,12 @@ import request from 'supertest';
 import { eighty } from './eighty';
 import { buildMongoFixtures, cleanupMongoFixtures } from './fixtures'; 
 import { mockAuthenticator } from './fixtures/mockAuth';
+import { EightyRouter } from './types/plugin';
 
 describe('getOne', () => {
     ['mongodb'].forEach(db => {
         let fixtures: any;
+        let eightyRouter: EightyRouter
         let uut: Express;
         let tearDownEighty: () => Promise<void>;
 
@@ -33,6 +35,8 @@ describe('getOne', () => {
                         authentication: true
                 `
             });
+
+            eightyRouter = router;
 
             uut.use(mockAuthenticator);
             uut.use(router);
@@ -86,6 +90,25 @@ describe('getOne', () => {
                 });
         });
 
-        
+        it(`${db}: correctly calls success callbacks`, async () => {
+            const mockFn = jest.fn();
+            eightyRouter
+                .resources('book')
+                .ops('getOne')
+                .onSuccess(async req => {
+                    await mockFn(req.resource);
+                });
+
+            const existingId = fixtures.books[0]._id;
+            await request(uut)
+                .get(`/books/${existingId}`)
+                .set({ Authorization: 'userA' })
+                .send()
+                .expect(200)
+                .expect(res => {
+                    expect(mockFn).toHaveBeenCalledTimes(1);
+                    expect(mockFn.mock.calls[0][0]).toEqual(res.body);
+                })
+        });
     });
 });

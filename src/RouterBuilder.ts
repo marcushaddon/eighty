@@ -22,6 +22,7 @@ import { buildPatchValidationMiddleware } from "./validation/buildPatchValidator
 import { buildListValidationMiddleware} from "./validation/buildListValidator";
 import { buildAuthorization } from "./auth/authorization";
 import { buildDocs } from "./documentation";
+import { OpFailureCallback, OpSuccessCallback } from "./types/plugin";
 
 
 
@@ -33,10 +34,14 @@ export type RouteHandler = {
 
 export class RouterBuilder {
     private readonly db: IDBClient;
+    private readonly successCallbacks: {
+        [ resourceName: string ]: {
+            [ op: string ]: OpSuccessCallback<any>[]
+        }
+    } = {};
 
     constructor(private readonly schema: EightySchema) {
         this.db = resolveDbClient(schema.database);
-        // TODO: Surface async init method
     }
 
     /**
@@ -73,7 +78,7 @@ export class RouterBuilder {
 
         const withDocs = [ ...flattened, ...docsRouteHandlers ];
         
-        // TODO: just manage this in db
+        // TODO: make this lazy
         const init = this.db.connect.bind(this.db);
         const tearDown = this.db.disconnect.bind(this.db);
     
@@ -89,7 +94,6 @@ export class RouterBuilder {
     
         // const specifiedOps = Object.keys(resource.operations || [] as string[]);
     
-        // TODO: make this opt in?
         const routes = resource.operations ? (
             Object.keys(resource.operations).map(
                 op => this.buildRoute(op as OperationName, resource)
@@ -131,6 +135,20 @@ export class RouterBuilder {
 
         middlewares.push(opMW);
 
+        const self = this;
+
+        //  TODO: Add middlware for running registered callbacks
+        middlewares.push(async function maybeRunCallbacks(req, res) {
+            // TODO: check for error
+            const { error, resource: opResource } = req as any;
+            if (error) {
+                
+            } else {
+                const callbacks = self.successCallbacks[resource.name]?.[op];
+                callbacks && await Promise.all(callbacks.map(cb => cb(req as any, res)))
+            }
+        })
+
         const { expressRoute } = getRoute(op, resource);
 
         return {
@@ -142,6 +160,16 @@ export class RouterBuilder {
 
     private buildDocs(schema: EightySchema) {
         return buildDocs(schema);
+    }
+
+    public registerSuccessCallback(resourceName: string, op: OperationName, cb: OpSuccessCallback<any>) {
+        if (!this.successCallbacks[resourceName]) this.successCallbacks[resourceName] = {};
+        if (!this.successCallbacks[resourceName][op]) this.successCallbacks[resourceName][op] = [];
+        this.successCallbacks[resourceName][op].push(cb);
+    }
+
+    public registerFailureCallback(resourceName: string, op: OperationName, cb: OpFailureCallback) {
+        // TODO: Register + add final middleware to appropriate route that runs all registered callbacks
     }
 }
 

@@ -16,27 +16,33 @@ export const buildGetOneOp = ({
         try {
             result = await db.getById(resource, id);
         } catch (e) {
-            return res
+            (req as any).error = e;
+            res
                 .status(e.status || 500)
                 .json({ message: e.message })
                 .end();
+            return next();
         }
 
         if ((req as any).authorizer) {
             try {
                 (req as any).authorizer((req as any).user, result);
             } catch (e) {
-                return res
+                (req as any).error = e;
+                res
                     .status(e.stats)
                     .json({ message: e.message })
                     .end();
+                return next();
             }
         }
 
-        return res
+        (req as any).resource = result;
+        res
             .status(200)
             .json(result)
             .end();
+        return next();
     };
 
     return getOne;

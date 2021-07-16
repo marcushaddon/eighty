@@ -56,7 +56,11 @@ export class MongoDbClient implements IDBClient {
             .limit(count);
     
         const all = await res?.toArray();
-        const transformed = (all || []).map(r => ({ ...r, id: r._id }));
+        const transformed = (all || []).map(r => {
+            const niceId = { ...r, id: r._id.toString() };
+            delete niceId._id;
+            return niceId;
+        });
 
         const total = await baseQuery!.count() as number;
 
@@ -98,11 +102,13 @@ export class MongoDbClient implements IDBClient {
         
         const created = res.ops[0];
 
-        return { ...created, id: created._id }
+        const withNiceId = { ...created, id: created._id.toString() };
+        delete withNiceId._id;
+        return withNiceId;
     }
 
     async update(resource: Resource, id: string, ops: Operation[]): Promise<EightyRecord | undefined> {
-        // TODO: parse into mongo update ops?
+        // TODO: parse into mongo update ops when possible?
         const existing = await this.getById(resource, id);
 
         let results: OperationResult<any>[] = [];
@@ -126,7 +132,6 @@ export class MongoDbClient implements IDBClient {
                 throw new BadRequestError(`Error updating resource: ${formatted}`)
             }
         }
-        // TODO: LOG RESULTS
 
         await this.replace(resource, existing.id, existing);
 
@@ -205,7 +210,12 @@ const mapFilters = (filterObj: ParsedQs): FilterQuery<any>[] => Object.entries(f
             throw new BadRequestError(`Unrecognized query filter: ${key}`);
         }
 
-        return { [OperatorMap[key]]: val };
+        const mappedOp = OperatorMap[key];
+        if (mappedOp === '$all' && !Array.isArray(val)) {
+            val = [val] as string[]
+        }
+
+        return { [mappedOp]: val };
     });
 
 const OperatorMap: { [ key: string ]: string } = {
@@ -215,5 +225,6 @@ const OperatorMap: { [ key: string ]: string } = {
     'gte': '$gte',
     'exists': '$TODO',
     'in': '$in',
-    // TODO: regex
-}
+    // TODO: regex, contains
+    'contains': '$all',
+};

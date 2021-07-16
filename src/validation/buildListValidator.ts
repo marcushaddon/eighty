@@ -42,6 +42,9 @@ export const buildListValidationMiddleware: ValidatorBuilder = (resource: Resour
                 .end();
         }
 
+        // TODO: validate filters (ie accept 'in', 'gte', etc but reject 'foo' as invalid and 'contains' as unupported in current version)
+        
+
         next();
     };
 

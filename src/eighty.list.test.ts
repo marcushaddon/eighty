@@ -1,12 +1,15 @@
 import express, { Express } from 'express';
+import { send } from 'process';
 import request from 'supertest';
 import { eighty } from './eighty';
 import { buildMongoFixtures, cleanupMongoFixtures } from './fixtures'; 
 import { mockAuthenticator } from './fixtures/mockAuth';
+import { EightyRouter } from './types/plugin';
 
 describe('list', () => {
     ['mongodb'].forEach(db => {
         let fixtures: any;
+        let eightyRouter: EightyRouter;
         let uut: Express;
         let tearDownEighty: () => Promise<void>;
 
@@ -15,6 +18,7 @@ describe('list', () => {
             const { router, init, tearDown } = eighty({
                 schemaRaw: testSchema
             });
+            eightyRouter = router;
 
             uut = express();
             uut.use(mockAuthenticator);
@@ -115,8 +119,6 @@ describe('list', () => {
             // [in] notation
             const url2 = `/books?${books.map((book: any) => `id[in]=${book._id.toString()}`).join('&')}`;
 
-            console.log(url1, 'URL1');
-
             await request(uut)
                 .get(url1)
                 .set({ Authorization: 'userA' })
@@ -191,6 +193,47 @@ describe('list', () => {
                         const last = res.body.results[res.body.results.length-1];
                         expect(first.name >= last.name).toBeTruthy();
                     });
-        })
+        });
+
+        it(`$${db}: queries for nested array fields containing single field`, async () => {
+            await request(uut)
+                .get('/users?interests[contains]=reading')
+                .send()
+                .expect(200)
+                .expect(res => {
+                    expect(res.body.results.length).toEqual(2);
+                })
+        });
+
+        it(`${db}: queries for nested array fields containing multiple fields`, async () => {
+            await request(uut)
+                .get('/users?interests[contains]=reading&interests[contains]=arithmetic')
+                .send()
+                .expect(200)
+                .expect(res => {
+                    expect(res.body.results.length).toEqual(1);
+                })
+        });
+
+        it(`${db}: correctly calls success callback`, async () => {
+            const mockFn = jest.fn();
+
+            eightyRouter
+                .resources('book')
+                .ops('list')
+                .onSuccess((req, res) => {
+                    mockFn(req.resource);
+                });
+            
+            await request(uut)
+                .get('/books')
+                .set({ Authorization: 'userA' })
+                .send()
+                .expect(200)
+                .expect(res => {
+                    expect(mockFn).toHaveBeenCalledTimes(1);
+                    expect(mockFn.mock.calls[0][0]).toEqual(res.body);
+                });
+        });
     });
 });

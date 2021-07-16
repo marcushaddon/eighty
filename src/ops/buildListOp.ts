@@ -33,27 +33,33 @@ export const buildListOp: OpBuilder = ({
         try {
             result = await db.list(params);
         } catch (e) {
-            return res
-                .status(e.status)
-                .json({ message: e.message })
+            (req as any).error = e;
+            res
+                .status(e.status || 500)
+                .json({ message: e.message || 'Internal server error' + e })
                 .end();
+            return next();
         }
         
+        (req as any).resource = result;
 
         if ((req as any).authorizer) {
             try {
                 result.results.forEach(res => (req as any).authorizer(res));
             } catch (e) {
-                return res
-                    .status(e.status)
-                    .json({ message: e.message })
+                (req as any).error = e;
+                res
+                    .status(e.status || 500)
+                    .json({ message: e.message || 'Internal server error' + e })
                     .end();
+                return next();
             }
         }
 
-        return res
+        res
             .status(200)
             .json(result).end();
+        return next();
     };
 
     return list;
