@@ -11,6 +11,7 @@ import { Operation} from 'fast-json-patch';
 import { Resource } from '../types/resource';
 
 export class MongoDbClient implements IDBClient {
+    private connected = false;
     private readonly connString?: string;
     private readonly dbName: string;
     private  db?: Db;
@@ -23,8 +24,10 @@ export class MongoDbClient implements IDBClient {
     }
 
     async connect(): Promise<void> {
+        if (this.connected) return;
         this.mongo = await MongoClient.connect(process.env.MONGO_URL!);
         this.db = await this.mongo.db(this.dbName);
+        this.connected = true;
     }
 
     async disconnect(): Promise<void> {
@@ -39,6 +42,8 @@ export class MongoDbClient implements IDBClient {
         order = 'ASC',
         filters = {}
     }: ListOps): Promise<PaginatedResponse> {
+        await this.connect();
+
         const translatedFilters = translateFilters(filters);
 
         let baseQuery = this.db
@@ -72,6 +77,8 @@ export class MongoDbClient implements IDBClient {
     }
 
     async getById(resource: Resource, id: string) {
+        await this.connect();
+
         const res = await this.db!
             .collection(resource.name + 's')
             .findOne({ _id: new ObjectId(id) }); // TODO: may not be able to assume valid ObjectId?
@@ -87,6 +94,8 @@ export class MongoDbClient implements IDBClient {
     }
 
     async create(resource: Resource, pending: any, createdBy?: string): Promise<EightyRecord> {
+        await this.connect();
+
         let res: InsertOneWriteOpResult<any>;
         try {
             const withCreatedBy = {
@@ -108,6 +117,8 @@ export class MongoDbClient implements IDBClient {
     }
 
     async update(resource: Resource, id: string, ops: Operation[]): Promise<EightyRecord | undefined> {
+        await this.connect();
+
         // TODO: parse into mongo update ops when possible?
         const existing = await this.getById(resource, id);
 
@@ -139,6 +150,8 @@ export class MongoDbClient implements IDBClient {
     }
 
     async replace(resource: Resource, id: string, replacement: EightyRecord, replacerId?: string): Promise<void> {
+        await this.connect();
+
         const res = await this.db!.collection(resource.name+'s')!
             .replaceOne(
                 { _id: new ObjectId(id) },
@@ -147,6 +160,8 @@ export class MongoDbClient implements IDBClient {
     }
 
     async delete(resourceName: string, id: string): Promise<void> {
+        await this.connect();
+
         await this.db!.collection(resourceName+'s')
             .deleteOne({ _id: new ObjectId(id) });
     }

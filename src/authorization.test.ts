@@ -48,9 +48,8 @@ describe('authorization', () => {
                 }]
             } as EightySchema;
 
-            const { router, init, tearDown } = eighty({ schema });
+            const { router, tearDown } = eighty({ schema });
             uut.use(router);
-            await init();
 
             const book = fixtures.books[0];
             const url = `/books/${book._id.toString()}`;

@@ -114,8 +114,10 @@ export const buildAuthorization = (resource: Resource, config: AuthorizationSche
             }
 
             if (!passPreCheck) {
+                (req as any).logger.error('Request failed authorization check: ' + explaination);
                 return res.status(403).send({ message: explaination }).end();
             }
+            (req as any).logger.info('Request passed authorization check: ' + explaination);
         } 
 
         if (postChecks.length === 0) {
@@ -134,6 +136,7 @@ export const buildAuthorization = (resource: Resource, config: AuthorizationSche
             }
         
             if (!passPostCheck) {
+                (req as any).logger.error('Request failed authorization check: ' + explaination);
                 throw new AuthorizationError(`Forbidden: ${explaination}`);
             }
         }

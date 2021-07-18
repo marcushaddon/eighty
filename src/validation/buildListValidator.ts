@@ -37,6 +37,7 @@ export const buildListValidationMiddleware: ValidatorBuilder = (resource: Resour
             const filtersWithCorrectedTypes = correctTypes(filteredFitlers, resource, policy);
             (req as any).filters = filtersWithCorrectedTypes;
         } catch (e) {
+            (req as any).logger.error('Encountered error resolving filter types', e);
             return res.status(e.status || 500)
                 .send({ message: e.message || 'Internal server error' })
                 .end();

@@ -16,7 +16,7 @@ describe('getOne', () => {
             fixtures = await buildMongoFixtures();
             uut = express();
 
-            const { router, init, tearDown } = eighty({
+            const { router, tearDown } = eighty({
                 schemaRaw: `
                 version: "1.0.0" 
 
@@ -41,8 +41,6 @@ describe('getOne', () => {
             uut.use(mockAuthenticator);
             uut.use(router);
             tearDownEighty = tearDown;
-
-            await init();
         });
 
         afterAll(async () => {

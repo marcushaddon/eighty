@@ -17,7 +17,7 @@ describe('create', () => {
             fixtures = await buildMongoFixtures();
             uut = express();
 
-            const { router, init, tearDown } = eighty({
+            const { router, tearDown } = eighty({
                 schemaRaw: `
                 version: "1.0.0" 
 
@@ -47,7 +47,6 @@ describe('create', () => {
             uut.use(router);
             tearDownEighty = tearDown;
 
-            await init();
         });
 
         afterAll(async () => {

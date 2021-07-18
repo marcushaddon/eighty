@@ -16,6 +16,7 @@ export const buildPatchValidationMiddleware: ValidatorBuilder = (resource: Resou
     const validatePatchRequest: Handler = (req, res, next) => {
         const patchError = validatePatch(req.body);
         if (patchError) {
+            (req as any).logger.error('Patch operation failed validation', patchError);
             return res.status(400)
                 .send({ message: patchError.message })
                 .end();
@@ -25,6 +26,7 @@ export const buildPatchValidationMiddleware: ValidatorBuilder = (resource: Resou
         if (patchValidator) {
             const problems = patchValidator(req.body);
             if (problems.length > 0) {
+                (req as any).logger.error('Patch operation failed validation for resource schema', { problems });
                 return res.status(400)
                     .json({ message: 'Bad request: ' + problems.join('\n')});
             }

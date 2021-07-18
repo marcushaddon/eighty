@@ -7,6 +7,7 @@ import { EightySchema } from "./types/schema";
 import { IDBClient, resolveDbClient } from "./db/db";
 import { getRoute } from "./util";
 import { loadSchema } from "./buildResourceSchemas";
+import { buildInitLoggerMiddleware } from "./logging/buildInitLoggerMW";
 import { buildCreateOp } from "./ops/buildCreateOp";
 import { buildReplaceOp } from "./ops/buildReplaceOp";
 import { buildUpdateOp } from "./ops/buildUpdateOp";
@@ -111,6 +112,9 @@ export class RouterBuilder {
         const middlewares: Handler[] = [];
         const operationConfig = resource.operations?.[op];
 
+        const initLoggerMW = buildInitLoggerMiddleware(resource, op);
+        middlewares.push(initLoggerMW);
+
         if (operationConfig?.authentication) {
             middlewares.push(ensureAuthenticated);
         }
@@ -137,15 +141,27 @@ export class RouterBuilder {
 
         const self = this;
 
-        //  TODO: Add middlware for running registered callbacks
         middlewares.push(async function maybeRunCallbacks(req, res) {
-            // TODO: check for error
-            const { error, resource: opResource } = req as any;
+            const { error, resource: opResource, logger } = req as any;
             if (error) {
-                
+                logger.error(
+                    `Encountered error performing ${op} on ${resource.name}`,
+                    error,
+                )
             } else {
+                logger.info(`Successfully performed ${op} on ${resource.name}`);
                 const callbacks = self.successCallbacks[resource.name]?.[op];
-                callbacks && await Promise.all(callbacks.map(cb => cb(req as any, res)))
+                callbacks && await Promise.all(callbacks.map(async cb => {
+                    try {
+                        await cb(req as any, res);
+                    } catch (e) {
+                        logger.error(
+                            `Encountered error while running success callback: ${cb.name || 'anonymous function'}`,
+                            e
+                        );
+                    }
+                    logger.info(`Successfully ran callback: ${cb.name || 'anonymous function'}`);
+                }));
             }
         })
 

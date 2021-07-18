@@ -9,9 +9,11 @@ export const buildCreateValidationMiddleware = (resource: Resource): Handler => 
         const result = validator?.validate(req.body, validator.schemas[resource.name]);
         
         if (result?.errors.length) {
+            const errReport = result.errors.map(e => `${e.property} ${e.message}`);
+            (req as any).logger.error('Request failed validation: ' + errReport);
             return res.status(400)
                 .json({
-                    message: 'Bad request: ' + result.errors.map(e => `${e.property} ${e.message}`)
+                    message: 'Bad request: ' + errReport
                 }).end();
         }
         return next();

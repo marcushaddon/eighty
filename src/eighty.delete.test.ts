@@ -19,7 +19,7 @@ describe('delete', () => {
         beforeAll(async () => {
             fixtures = await buildMongoFixtures();
 
-            const { router, init, tearDown } = eighty({
+            const { router, tearDown } = eighty({
                 schemaRaw: `
                 version: "1.0.0"
 
@@ -52,9 +52,6 @@ describe('delete', () => {
             uut = express();
             uut.use(mockAuthenticator);
             uut.use(router);
-
-
-            await init();
         });
         
         afterAll(async () => {
