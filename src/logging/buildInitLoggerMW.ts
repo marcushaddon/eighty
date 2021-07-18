@@ -1,4 +1,5 @@
 import { Handler } from "express";
+import { v4 as uuidv4 } from 'uuid';
 import { OperationName } from "../types/operation";
 import { Resource } from "../types/resource";
 import { Logger } from "./Logger";
@@ -12,6 +13,10 @@ export const buildInitLoggerMiddleware = (resource: Resource, op: OperationName)
             url: req.url,
             params: req.params,
         });
+
+        // TODO: Allow configuration of tracing
+        logger.setCtx('traceId', req.headers.traceId);
+        logger.setCtx('segmentId', uuidv4());
 
         (req as any).logger = logger;
         next();
