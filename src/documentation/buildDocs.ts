@@ -1,12 +1,13 @@
 import { OpenAPI, OpenAPIV3 } from "openapi-types";
 import { parse } from "yaml";
+import { Schema } from "jsonschema";
 import { opMethods } from "../const/operations";
 import { Operation, OperationName } from "../types/operation";
 import { Resource } from "../types/resource";
 import { EightySchema } from "../types/schema";
 import { getRoute, friendlyOpNames } from "../util";
-import { readFile } from "../eighty";
-import { Schema } from "jsonschema";
+import { loadSchema } from "../buildResourceSchemas";
+import { JsonSchemaGenerator } from "typescript-json-schema";
 
 export const buildDocs = (schema: EightySchema): OpenAPIV3.Document => {
     const baseDoc: OpenAPIV3.Document = {
@@ -74,7 +75,7 @@ const buildPath = (
         [successStatus.status]: {
             description: successDescription,
             content: {
-                'application/json': { schema: successContent },
+                'application/json': { schema: successContent as OpenAPIV3.ResponseObject },
             },
         }
     };
@@ -145,7 +146,7 @@ const buildAuthDescriptionTemplate = (op: Operation): string => {
 }
 
 const maybeGetSchema = (resource: Resource) => {
-    return resource.schemaPath && parse(readFile(resource.schemaPath));
+    return resource.schemaPath && loadSchema(resource) || {};
 };
 
 const getPaginatedVersion = (schema: Schema): Schema => ({
@@ -161,6 +162,27 @@ const getPaginatedVersion = (schema: Schema): Schema => ({
     },
     required: [ 'total', 'results' ]
 });
+
+const buildPatchOpSchema = (): Schema => {
+
+    return {
+        type: "array",
+        items: {
+            type: "object",
+            properties: {
+                op: { 
+                    type: "string",
+                    enum: [ "add", "remove", "replace", "copy" ],
+                 },
+                path: { type: "string" }, // TODO: maybe we just put all the examples in here?
+                from: { type: "string" },
+                value: { type: "any" },
+            },
+            required: [ "op", "path" ]
+        }
+
+    };
+}
 
 const opMap = {
     getOne: {
@@ -200,7 +222,7 @@ const opMap = {
         successStatus: {
                 status: 200,
                 descriptionTemplate: `Successfully updated $resource$.`,
-                getContent: maybeGetSchema,
+                getContent: (resource: Resource) => buildPatchOpSchema(),
             }
     },
     delete: {

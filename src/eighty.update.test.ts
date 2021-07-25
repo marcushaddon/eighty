@@ -5,7 +5,7 @@ import { mockAuthenticator } from './fixtures/mockAuth';
 import { buildMongoFixtures, cleanupMongoFixtures } from './fixtures';
 import { EightyRouter } from './types/plugin';
 
-describe('update', () => {
+describe('updateOp', () => {
     ['mongodb'].forEach(db => {
         let eightyRouter: EightyRouter;
         let uut: Express;
@@ -21,7 +21,7 @@ describe('update', () => {
             
             resources:
               - name: book
-                schemaPath: ./src/fixtures/schemas/book.yaml
+                schemaPath: ./src/fixtures/schemas/book.ts
                 operations:
                   getOne:
                     authentication: false
@@ -33,7 +33,7 @@ describe('update', () => {
             uut = express();
             uut.use(mockAuthenticator);
 
-            const { router, init, tearDown } = await eighty({
+            const { router, init, tearDown } = eighty({
                 schemaRaw: testSchema,
             });
 
@@ -44,7 +44,6 @@ describe('update', () => {
 
             fixtures = await buildMongoFixtures();
 
-            await init();
         });
 
         afterAll(async () => {
@@ -82,6 +81,8 @@ describe('update', () => {
                 ]).expect(400)
                 .expect(res => expect(res.body.message).toContain('is not of a type(s)'))
         });
+
+        // TODO: patch for unknown path using ts schema throws 500?
 
         // Book 0
         it(`${db}: applies valid replace operation`, async () => {
@@ -240,7 +241,7 @@ describe('update', () => {
                 .expect(res => expect(res.body.title).toEqual('Changed'));
         })
 
-        // TODO: doesnt apply operation if test fails (include one passing test)
+//         // TODO: doesnt apply operation if test fails (include one passing test)
         it(`${db}: doesnt apply change if test fails`, async () => {
             const book = fixtures.books[6];
             const url = `/books/${book._id.toString()}`;
@@ -280,7 +281,7 @@ describe('update', () => {
                 .send()
                 .expect(200)
                 .expect(res => expect(res.body.title).toEqual(book.title));
-        })
+        });
 
         // Book 8
         it(`${db}: it applies multiple valid ops`, async () => {
@@ -341,7 +342,7 @@ describe('update', () => {
                 })
         });
 
-        // TODO: Find suite of tests for PATCH standard?
+//         // TODO: Find suite of tests for PATCH standard?
 
         // Book 10
         it(`${db}: rejects invalid replace op on array field`, async () => {

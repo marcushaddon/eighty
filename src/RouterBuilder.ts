@@ -6,7 +6,7 @@ import { HttpMethod, Operations, opMethods } from "./const/operations";
 import { EightySchema } from "./types/schema";
 import { IDBClient, resolveDbClient } from "./db/db";
 import { getRoute } from "./util";
-import { loadSchema } from "./buildResourceSchemas";
+import { loadValidator } from "./buildResourceSchemas";
 import { buildInitLoggerMiddleware } from "./logging/buildInitLoggerMW";
 import { buildCreateOp } from "./ops/buildCreateOp";
 import { buildReplaceOp } from "./ops/buildReplaceOp";
@@ -55,7 +55,7 @@ export class RouterBuilder {
         for (const resource of resources) {
             if (!resource.schemaPath) continue;
             
-            const validator = loadSchema(resource);
+            const validator = loadValidator(resource);
             if (!validator) continue;
     
             ValidatorProvider.register(resource.schemaPath, validator);
