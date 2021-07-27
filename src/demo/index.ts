@@ -1,4 +1,4 @@
-import { eighty } from "../src";
+import { eighty } from "..";
 
 const {
     init,
