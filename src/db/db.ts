@@ -1,8 +1,6 @@
 import * as process from 'process';
 import * as jsonpatch from 'fast-json-patch';
 import { Database, EightyRecord } from '../types/database';
-import { MockDbClient } from './mockdb';
-import { PostgresClient } from './postgres';
 import { MongoDbClient } from './mongodb';
 import { PaginatedResponse } from '../types/api';
 import { Resource } from '../types/resource';
