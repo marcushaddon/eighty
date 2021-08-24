@@ -5,9 +5,10 @@ import { opMethods } from "../const/operations";
 import { Operation, OperationName } from "../types/operation";
 import { Resource } from "../types/resource";
 import { EightySchema } from "../types/schema";
-import { getRoute, friendlyOpNames } from "../util";
+import { getRoute, friendlyOpNames, printAllPaths } from "../util";
 import { loadSchema } from "../buildResourceSchemas";
 import { JsonSchemaGenerator } from "typescript-json-schema";
+import path from "path/posix";
 
 export const buildDocs = (schema: EightySchema): OpenAPIV3.Document => {
     const baseDoc: OpenAPIV3.Document = {
@@ -62,6 +63,15 @@ const buildPath = (
     resource: Resource
 ) => {
     const { openApiRoute, openApiParams } = getRoute(op, resource);
+
+    const queryParamTemplates = op === 'list' ? buildListParams(resource) : [];
+    const queryParams = queryParamTemplates.map( template => ({
+        in: template.in,
+        name: template.name,
+        description: fmt(template.descriptionTemplate, op, resource, { field: template.name }),
+        example: fmt(template.exampleTemplate, op, resource, { field: template.name }),
+    }))
+
     const { descriptionTemplate, successStatus } = opMap[op];
     const method = opMethods[op];
     const description = fmt(descriptionTemplate, op, resource);
@@ -86,19 +96,24 @@ const buildPath = (
         };
     };
 
-    const parameters = openApiParams.map(p => ({
-        ...p,
-        description: fmt(
-            p.descriptionTemplate,
-            op,
-            resource
-        )
-    }));
+    const parameters = openApiParams.map(p => {
+        return {
+            ...p,
+            description: fmt(
+                p.descriptionTemplate,
+                op,
+                resource
+            )
+        };
+
+    });
+
+    const allParams = [ ...parameters, ...queryParams ];
 
     return {
         method,
         route: openApiRoute,
-        parameters,
+        parameters: allParams,
         description: description + authDescription,
         responses: stati,
     }
@@ -120,9 +135,9 @@ const buildAuthDescriptionTemplate = (op: Operation): string => {
                     case 'inGroup':
                         return `belong to user group '${config.group}'`;
                     case 'isResource':
-                        return 'be the $resource$ in question';
+                        return 'be the <resource> in question';
                     case 'isOwner':
-                        return 'be the owner of the $resource$';
+                        return 'be the owner of the <resource>';
                     default:
                         throw new Error(`Unknown authorization type: ${(config as any).type}`);
                 }
@@ -182,54 +197,134 @@ const buildPatchOpSchema = (): Schema => {
         }
 
     };
+};
+
+// TODO: This is where its broken
+const buildListParams = (resource: Resource): {
+    in: string,
+    name: string,
+    descriptionTemplate: string,
+    exampleTemplate: string,
+}[] => {
+    const irrelevant = new Set([ 'required', 'object', 'properties', 'type', '$schema', '' ]);
+    // TODO: Figure out valid filter params based on resource
+    if (!resource.schemaPath) return [];
+    const schema = loadSchema(resource);
+
+    const paths = printAllPaths(schema);
+    const relevantPaths = paths
+        .filter(path => (
+            path.indexOf('required') === -1 &&
+            path[path.length-1] !== 'object' &&
+            path[0] !== '$schema'
+        ));
+
+    const params = relevantPaths
+        .map(path => path
+                .map(part => part === 'items' && '[i]' || part)
+                .filter(part => !irrelevant.has(part))
+                .slice(0, -1)
+                .join('.'));
+    const types = relevantPaths.map(p => p[p.length - 1]);
+    
+    const filters = params
+        .map((param, i) => {
+            const typeForParam = types[i];
+            const ops = queryTypeOperatorsTemplates[typeForParam];
+            return ops.map(({ descTemplate, exampleTemplate, op }) => ({ 
+                in: 'query',
+                name: param + (op === '=' ? '' : `[${op}]`),
+                descriptionTemplate: descTemplate,
+                exampleTemplate: exampleTemplate,
+            }))
+        }).reduce((acc, curr) => [ ...acc, ...curr], []);
+    
+    return filters;
 }
+
+const equalQueryParam = (t: string) => ({
+    op: '=',
+    descTemplate: 'filters for records where <field> equals given value',
+    exampleTemplate: `?<field>=${t === 'string' && 'foo' || t === 'number' && '7' || t === 'boolean' && 'true' || 'TODO'}`
+});
+
+const queryTypeOperatorsTemplates: { [ _: string ]: { op: string, descTemplate: string, exampleTemplate: string }[] } = {
+    number: [equalQueryParam('number'), {
+        op: '[in]',
+        descTemplate: 'filters for records where <field> in values',
+        exampleTemplate: '?<field>[in]=3&<field>[in]=5',
+    }, ...[['gt', 'greater than'], ['lt', 'less than'], ['gte', 'greater than or equal to'], ['lte', 'less than or equal to']].map(([op, desc]) => ({
+        op: `[${op}]`,
+        descTemplate: `filters for records where <field> ${desc} given value`,
+        exampleTemplate: `?<field>=10`
+    }))],
+    string: [equalQueryParam('string'), {
+        op: '[in]',
+        descTemplate: 'filters for records where <field> in values',
+        exampleTemplate: '?<field>[in]=3&<field>[in]=5',
+    }, ...[['gt', 'comes after'], ['lt', 'comes before'], ['gte', 'comes after or the same as'], ['lte', 'comes before or the same as']].map(([op, desc]) => ({
+        op: `[${op}]`,
+        descTemplate: `filters for records where <field> ${desc} given value`,
+        exampleTemplate: `?<field>=aab`
+    })), {
+        op: '[likeTODO]', // TODO?
+        descTemplate: 'filters for records where <field> matches given pattern',
+        exampleTemplate: '?<field>=t*do'
+    }],
+    array: [{
+        op: '[containsTODO]',
+        descTemplate: 'filters for records where <field> contains given value',
+        exampleTemplate: '?<field>=foo'
+    }],
+    boolean: [equalQueryParam('boolean')],
+};
 
 const opMap = {
     getOne: {
-        descriptionTemplate: `Fetches one $resource$.`,
+        descriptionTemplate: `Fetches one <resource>.`,
         successStatus: {
                 status: 200,
-                descriptionTemplate: `Successfully fetched a $resource$.`,
+                descriptionTemplate: `Successfully fetched a <resource>.`,
                 getContent: maybeGetSchema
             },
     },
     list: {
-        descriptionTemplate: `Lists $resource$s.`,
+        descriptionTemplate: `Lists <resource>s.`,
         successStatus: {
                 status: 200,
-                descriptionTemplate: `Successfully listed $resource$s.`,
+                descriptionTemplate: `Successfully listed <resource>s.`,
                 getContent: (resource: Resource) => getPaginatedVersion(maybeGetSchema(resource)),
             }
     },
     create: {
-        descriptionTemplate: `Creates a new $resource$.`,
+        descriptionTemplate: `Creates a new <resource>.`,
         successStatus: {
                 status: 201,
-                descriptionTemplate: `Successfully created a $resource$.`,
+                descriptionTemplate: `Successfully created a <resource>.`,
                 getContent: maybeGetSchema,
             }
     },
     replace: {
-        descriptionTemplate: `Replaces one $resource$.`,
+        descriptionTemplate: `Replaces one <resource>.`,
         successStatus: {
                 status: 200,
-                descriptionTemplate: `Successfully replaced $resource$.`,
+                descriptionTemplate: `Successfully replaced <resource>.`,
                 getContent: maybeGetSchema,
             }
     },
     update: {
-        descriptionTemplate: `Makes JSON Patch update to one $resource$.`,
+        descriptionTemplate: `Makes JSON Patch update to one <resource>.`,
         successStatus: {
                 status: 200,
-                descriptionTemplate: `Successfully updated $resource$.`,
+                descriptionTemplate: `Successfully updated <resource>.`,
                 getContent: (resource: Resource) => buildPatchOpSchema(),
             }
     },
     delete: {
-        descriptionTemplate: `Deletes one $resource$.`,
+        descriptionTemplate: `Deletes one <resource>.`,
         successStatus: {
                 status: 200,
-                descriptionTemplate: `Successfully fetched a $resource$.`,
+                descriptionTemplate: `Successfully fetched a <resource>.`,
                 getContent: (resource: Resource) => undefined,
             }
     },
@@ -238,15 +333,15 @@ const opMap = {
 const errors = [
     {
         status: 404,
-        descriptionTemplate: `Unable to find $resource$.`,
+        descriptionTemplate: `Unable to find <resource>.`,
     },
     {
         status: 401,
-        descriptionTemplate: `Unauthenticated users are not allowed to $op$ $resource$s.`
+        descriptionTemplate: `Unauthenticated users are not allowed to <op> <resource>s.`
     },
     {
         status: 403,
-        descriptionTemplate: `User is not authorized to $op$ this $resource$.`
+        descriptionTemplate: `User is not authorized to <op> this <resource>.`
     },
     {
         status: 500,
@@ -257,8 +352,22 @@ const errors = [
 const fmt = (
     template: string,
     op: OperationName,
-    resource: Resource
-): string => template
-    .replace(/\$resource\$/g, resource.name)
-    .replace(/\$op\$/g, friendlyOpNames[op]);
+    resource: Resource,
+    dict?: { [ from: string ]: string },
+): string => {
+
+    let opsAndNames = template
+        .replace(/<resource>/g, resource.name)
+        .replace(/<op>/g, friendlyOpNames[op]);
+
+    if (!dict) return opsAndNames;
+
+    Object.entries(dict)
+        .forEach(([ from, to ])  => {
+            const exp = new RegExp(`<${from}>`, 'g');
+            opsAndNames = opsAndNames
+                .replace(exp, to);
+        });
+    return opsAndNames;
+}
 

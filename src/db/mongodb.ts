@@ -14,7 +14,7 @@ export class MongoDbClient implements IDBClient {
     private connected = false;
     private readonly connString?: string;
     private readonly dbName: string;
-    private  db?: Db;
+    private db?: Db;
     private mongo?: MongoClient;
 
     constructor() {

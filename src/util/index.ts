@@ -28,4 +28,16 @@ export const friendlyOpNames = {
     replace: 'replace',
     update: 'update',
     delete: 'delete'
-}
+};
+
+const isObj = (val: any) => val !== null && typeof val === 'object';
+
+export const printAllPaths = (obj: any): string[][] => Object.keys(obj)
+    .map(key => {
+        const val = obj[key];
+        if (!isObj(val)) {
+            return [[ key, val ]];
+        } else {
+            return printAllPaths(val).map(branch => [ key, ...branch ]);  
+        }
+    }).reduce((acc, curr) => [ ...acc, ...curr ], []);

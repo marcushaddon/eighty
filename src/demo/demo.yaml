@@ -7,7 +7,7 @@ database:
 
 resources:
   - name: book
-    schemaPath: ./demo/book.ts
+    schemaPath: ./src/demo/book.ts
     operations:
       list:
         authentication: false
