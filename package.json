@@ -7,6 +7,9 @@
     "test": "jest --detectOpenHandles --coverage .",
     "build": "tsc -p ./tsconfig.json"
   },
+  "publishConfig": {
+    "@marcushaddon:registry": "https://npm.pkg.github.com"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
