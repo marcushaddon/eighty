@@ -1,5 +1,7 @@
-import { OpenAPI, OpenAPIV3 } from "openapi-types";
-import { parse } from "yaml";
+/**
+ * This will be rewritten after better planning.
+ */
+import { OpenAPIV3 } from "openapi-types";
 import { Schema } from "jsonschema";
 import { opMethods } from "../const/operations";
 import { Operation, OperationName } from "../types/operation";
@@ -7,8 +9,7 @@ import { Resource } from "../types/resource";
 import { EightySchema } from "../types/schema";
 import { getRoute, friendlyOpNames, printAllPaths } from "../util";
 import { loadSchema } from "../buildResourceSchemas";
-import { JsonSchemaGenerator } from "typescript-json-schema";
-import path from "path/posix";
+
 
 export const buildDocs = (schema: EightySchema): OpenAPIV3.Document => {
     const baseDoc: OpenAPIV3.Document = {
