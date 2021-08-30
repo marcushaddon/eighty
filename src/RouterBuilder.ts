@@ -51,7 +51,6 @@ export class RouterBuilder {
      * Creates routes and handlers to be registered on an Express router.
      */
     build() {
-        console.log('BUILDING SERVER');
         const resources = (this.schema.resources || []);
 
         // Register validators
@@ -163,7 +162,6 @@ export class RouterBuilder {
             const status = (req as any).status || 500;
             const resource = (req as any).resource;
 
-            console.log('FINISHING REQW');
             return res.status(status).json(resource).end();
         });
 

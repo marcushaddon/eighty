@@ -57,7 +57,6 @@ export const buildPatchValidator = (
         const problems: string[] = [];
 
         for (const { op, path, value } of patches) {
-            console.log(path, value);
             if (!(path in knownPaths)) {
                 if (unknownFieldsPolicy === 'reject') {
                     problems.push(`Unknown path: ${path}. Only known paths may be updated.`);
@@ -68,7 +67,6 @@ export const buildPatchValidator = (
             const schema = knownPaths[path];
             const result = validate(value, schema);
             for (const res of result.errors) {
-                console.log('Got error', res);
                 problems.push(`${[ path, res.path ].join('/').replace(/\/$/, '')} ${res.message}`);
             }
         }
