@@ -40,10 +40,8 @@ export const buildUpdateOp: OpBuilder = ({ resource, db }): Handler => {
         }
 
         (req as any).resource = result;
+        (req as any).status = 200
 
-        res.status(200)
-            .send(result)
-            .end();
         return next();
     };
 

@@ -16,7 +16,8 @@ export const buildDeleteOp: OpBuilder = ({ resource, db }): Handler => {
             return next();
         }
 
-        res.status(204).end();
+        (req as any).status = 204;
+
         return next();
     };
 

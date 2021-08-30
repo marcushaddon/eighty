@@ -44,69 +44,9 @@ export const eighty = (opts: EightyOpts) => {
     }
 
     const routerBuilder = new RouterBuilder(schema);
-    
-    const {
-        routesAndHandlers,
-        init,
-        tearDown,
-    } = routerBuilder.createRoutesAndHandlers();
 
-    const router = express();
-    router.use(json());
+    // const devChecklist = buildChecklist(schema);
+    // console.table(devChecklist);
 
-    const middlewareReport: string[][] = [];
- 
-    for (const { route, handler, method } of routesAndHandlers) {
-        middlewareReport.push([ method, route, handler.map(h => h.name).join('->') ])
-        router[method](route, ...handler);
-    }
-
-    // This should maybe happen after registering 'plugins'
-    console.table(middlewareReport);
-
-    const devChecklist = buildChecklist(schema);
-    console.table(devChecklist);
-
-    const resourceFinder: ResourceFinder<any> = (resourceName: string) => {
-        const resource = schema.resources.find(rec => rec.name === resourceName);
-        if (typeof resource === 'undefined') {
-            throw new Error(`Eighty: unknown resource: ${resourceName}`);
-        }
-
-        return {
-            ops: (op: OperationName) => {
-                if (!resource.operations || !(op in resource.operations)) {
-                    throw new Error(`Error registering op callback, operation ${op} not specified for resource "${name}"`);
-                }
-
-                const subscriber: OpSubscriber<any> = {} as OpSubscriber<any>;
-                subscriber.onSuccess = cb => {
-                    routerBuilder.registerSuccessCallback(
-                        resourceName,
-                        op,
-                        cb
-                    );
-                    return subscriber;
-                };
-                subscriber.onFailure = cb => {
-                    routerBuilder.registerFailureCallback(
-                        resourceName,
-                        op,
-                        cb,
-                    )
-                    return subscriber;
-                }
-
-                return subscriber;
-            }
-        }
-    }
-
-    (router as any).resources = resourceFinder;
-
-    return {
-        init,
-        tearDown,
-        router: router as EightyRouter
-    };
+    return routerBuilder;
 };

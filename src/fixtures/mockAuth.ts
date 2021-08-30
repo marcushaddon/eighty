@@ -33,6 +33,7 @@ export const mockAuthenticator: Handler = (req, res, next) => {
         superUser,
     };
     (req as any).user = users[mockToken];
+    console.log({ mockToken, user: users[mockToken] }, 'MOCK AUTH');
     next();
 };
 

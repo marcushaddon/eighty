@@ -1,15 +1,35 @@
 import express, { Express } from 'express';
-import { send } from 'process';
 import request from 'supertest';
 import { eighty } from './eighty';
 import { buildMongoFixtures, cleanupMongoFixtures } from './fixtures';
 import { mockAuthenticator } from './fixtures/mockAuth';
-import { EightyRouter } from './types/plugin';
+import { RouterBuilder } from './RouterBuilder';
 
 describe('create', () => {
     ['mongodb'].forEach(db => {
+        const testSchema = `
+        version: "1.0.0" 
+
+        database:
+          type: ${db}
+
+        resources:
+          - name: user
+            schemaPath: ./src/fixtures/schemas/user.yaml
+            operations:
+              create:
+                authentication: false
+          - name: book
+            schemaPath: ./src/fixtures/schemas/book.yaml
+            operations:
+              getOne:
+                authentication: false
+              create:
+                authentication: true
+
+        `;
         let fixtures: { users: any[]; books: any[] };
-        let eightyRouter: EightyRouter;
+        let builder: RouterBuilder;
         let uut: Express;
         let tearDownEighty: () => Promise<void>;
 
@@ -17,31 +37,11 @@ describe('create', () => {
             fixtures = await buildMongoFixtures();
             uut = express();
 
-            const { router, tearDown } = eighty({
-                schemaRaw: `
-                version: "1.0.0" 
-
-                database:
-                  type: ${db}
-
-                resources:
-                  - name: user
-                    schemaPath: ./src/fixtures/schemas/user.yaml
-                    operations:
-                      create:
-                        authentication: false
-                  - name: book
-                    schemaPath: ./src/fixtures/schemas/book.yaml
-                    operations:
-                      getOne:
-                        authentication: false
-                      create:
-                        authentication: true
-
-                `
+            builder = eighty({
+                schemaRaw: testSchema,
             });
 
-            eightyRouter = router;
+            const { router, tearDown } = builder.build();
 
             uut.use(mockAuthenticator);
             uut.use(router);
@@ -129,37 +129,6 @@ describe('create', () => {
                     }
                 }).expect(201)
                 .expect(res => expect(res.body.createdBy).toEqual('userAID'));
-        });
-
-        it(`${db}: runs success callbacks`, async () => {
-            const mockFn1 = jest.fn();
-            const mockFn2 = jest.fn();
-            eightyRouter
-                .resources('book')
-                .ops('create')
-                .onSuccess((req, res) => {
-                    mockFn1(req.resource);
-                }).onSuccess((req) => {
-                    mockFn2(req.resource);
-                    mockFn2(req.resource);
-                })
-
-            await request(uut)
-                .post('/books')
-                .set({ Authorization: 'userA' })
-                .send({
-                    title: 'Test book',
-                    pages: 32,
-                    author: {
-                        name: 'Test author',
-                        age: 2354
-                    }
-                }).expect(201)
-                .expect(res => {
-                    expect(mockFn1).toHaveBeenCalledTimes(1);
-                    expect(mockFn2).toHaveBeenCalledTimes(2);
-                    expect(mockFn1.mock.calls[0][0]).toEqual(res.body);
-                })
         });
     });
 });

@@ -35,11 +35,9 @@ export const buildCreateOp = ({
 
         const created = await db.create(resource, pending, createdBy);
 
-        res.status(201)
-            .json(created)
-            .end();
-        
+        (req as any).status = 201;
         (req as any).resource = created;
+
         return next();
     };
 

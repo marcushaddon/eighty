@@ -56,9 +56,9 @@ export const buildListOp: OpBuilder = ({
             }
         }
 
-        res
-            .status(200)
-            .json(result).end();
+        (req as any).status = 200;
+        (res as any).resource = result;
+            
         return next();
     };
 

@@ -4,6 +4,7 @@ name: Books API
 
 database:
   type: mongodb
+  
 
 resources:
   - name: book

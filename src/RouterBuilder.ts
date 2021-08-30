@@ -1,4 +1,5 @@
-import { Handler } from "express";
+import express, { Handler } from "express";
+import { json } from "body-parser";
 import OpenApi from 'swagger-ui-express';
 import { Resource } from "./types/resource";
 import { OperationName } from "./types/operation";
@@ -23,7 +24,7 @@ import { buildPatchValidationMiddleware } from "./validation/buildPatchValidator
 import { buildListValidationMiddleware} from "./validation/buildListValidator";
 import { buildAuthorization } from "./auth/authorization";
 import { buildDocs } from "./documentation";
-import { OpFailureCallback, OpSuccessCallback } from "./types/plugin";
+import { OpSuccessCallback, OpSubscriber } from "./types/plugin";
 
 
 
@@ -31,9 +32,10 @@ export type RouteHandler = {
     method: HttpMethod,
     handler: Handler[],
     route: string,
-}
+};
 
 export class RouterBuilder {
+    private built = false;
     private readonly db: IDBClient;
     private readonly successCallbacks: {
         [ resourceName: string ]: {
@@ -48,7 +50,8 @@ export class RouterBuilder {
     /**
      * Creates routes and handlers to be registered on an Express router.
      */
-    createRoutesAndHandlers() {
+    build() {
+        console.log('BUILDING SERVER');
         const resources = (this.schema.resources || []);
 
         // Register validators
@@ -78,12 +81,21 @@ export class RouterBuilder {
         }];
 
         const withDocs = [ ...flattened, ...docsRouteHandlers ];
+
+        const router = express();
+        router.use(json());
+
+        for (const { route, handler, method } of withDocs) {
+            router[method](route, ...handler);
+        }
         
         // TODO: make this lazy
         const init = this.db.connect.bind(this.db);
         const tearDown = this.db.disconnect.bind(this.db);
-    
-        return { routesAndHandlers: withDocs, init, tearDown };
+
+        this.built = true;
+
+        return { router, init, tearDown };
     };
 
     /**
@@ -139,31 +151,21 @@ export class RouterBuilder {
 
         middlewares.push(opMW);
 
-        const self = this;
+        // TODO: rename to plugin
+        const callbacks = this.successCallbacks[resource.name]?.[op]
 
-        middlewares.push(async function maybeRunCallbacks(req, res) {
-            const { error, resource: opResource, logger } = req as any;
-            if (error) {
-                logger.error(
-                    `Encountered error performing ${op} on ${resource.name}`,
-                    error,
-                )
-            } else {
-                logger.info(`Successfully performed ${op} on ${resource.name}`);
-                const callbacks = self.successCallbacks[resource.name]?.[op];
-                callbacks && await Promise.all(callbacks.map(async cb => {
-                    try {
-                        await cb(req as any, res);
-                    } catch (e) {
-                        logger.error(
-                            `Encountered error while running success callback: ${cb.name || 'anonymous function'}`,
-                            e
-                        );
-                    }
-                    logger.info(`Successfully ran callback: ${cb.name || 'anonymous function'}`);
-                }));
-            }
-        })
+        if (callbacks) {
+            callbacks.forEach(cb => middlewares.push(cb as Handler));
+        }
+
+        // Finisher
+        middlewares.push((req, res) => {
+            const status = (req as any).status || 500;
+            const resource = (req as any).resource;
+
+            console.log('FINISHING REQW');
+            return res.status(status).json(resource).end();
+        });
 
         const { expressRoute } = getRoute(op, resource);
 
@@ -179,13 +181,43 @@ export class RouterBuilder {
     }
 
     public registerSuccessCallback(resourceName: string, op: OperationName, cb: OpSuccessCallback<any>) {
+        if (this.built) {
+            throw new Error('Invalid use of RouterBuilder fluent API: Op middleware plugins must be registered before calling "build()"');
+        }
+
         if (!this.successCallbacks[resourceName]) this.successCallbacks[resourceName] = {};
         if (!this.successCallbacks[resourceName][op]) this.successCallbacks[resourceName][op] = [];
         this.successCallbacks[resourceName][op].push(cb);
     }
 
-    public registerFailureCallback(resourceName: string, op: OperationName, cb: OpFailureCallback) {
-        // TODO: Register + add final middleware to appropriate route that runs all registered callbacks
+    public resources(resourceName: string) {
+        const resource = this.schema.resources.find(rec => rec.name === resourceName);
+        if (typeof resource === 'undefined') {
+            throw new Error(`Eighty: unknown resource: ${resourceName}`);
+        }
+
+        const self = this;
+
+        return {
+            ops: (op: OperationName) => {
+                if (!resource.operations || !(op in resource.operations)) {
+                    throw new Error(`Error registering op callback, operation ${op} not specified for resource "${name}"`);
+                }
+
+                const subscriber: OpSubscriber<any> = {} as OpSubscriber<any>;
+                // TODO: rename onSuccess -> something like 'afterQuery/Op' or something
+                subscriber.onSuccess = handler => {
+                    self.registerSuccessCallback(
+                        resourceName,
+                        op,
+                        handler
+                    );
+                    return subscriber;
+                };
+
+                return subscriber;
+            }
+        }
     }
 }
 

@@ -48,7 +48,7 @@ describe('authorization', () => {
                 }]
             } as EightySchema;
 
-            const { router, tearDown } = eighty({ schema });
+            const { router, tearDown } = eighty({ schema }).build();
             uut.use(router);
 
             const book = fixtures.books[0];
@@ -84,7 +84,7 @@ describe('authorization', () => {
                 }],
             } as EightySchema;
 
-            const { router, init, tearDown } = eighty({ schema });
+            const { router, init, tearDown } = eighty({ schema }).build();
             uut.use(router);
             await init();
 

@@ -38,10 +38,8 @@ export const buildGetOneOp = ({
         }
 
         (req as any).resource = result;
-        res
-            .status(200)
-            .json(result)
-            .end();
+        (req as any).status = 200;
+
         return next();
     };
 

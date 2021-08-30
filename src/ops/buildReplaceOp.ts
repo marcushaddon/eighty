@@ -17,7 +17,8 @@ export const buildReplaceOp: OpBuilder = ({ resource, db }) => {
         }
         
 
-        res.status(200).send();
+        (req as any).status = 200;
+        // TODO: Send back replaced resource
         return next();
     };
 ;

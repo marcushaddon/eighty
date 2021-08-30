@@ -39,7 +39,7 @@ describe('replace', () => {
                       replace:
                         authentication: false
                 `
-            });
+            }).build();
 
             teardown = tearDown;
 
