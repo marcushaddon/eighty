@@ -62,7 +62,8 @@ var buildReplaceOp = function (_a) {
                         .end();
                     return [2 /*return*/, next()];
                 case 4:
-                    res.status(200).send();
+                    req.status = 200;
+                    // TODO: Send back replaced resource
                     return [2 /*return*/, next()];
             }
         });

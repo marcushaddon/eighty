@@ -83,9 +83,8 @@ var buildListOp = function (_a) {
                             return [2 /*return*/, next()];
                         }
                     }
-                    res
-                        .status(200)
-                        .json(result).end();
+                    req.status = 200;
+                    res.resource = result;
                     return [2 /*return*/, next()];
             }
         });

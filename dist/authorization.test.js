@@ -99,7 +99,7 @@ describe('authorization', function () {
                                     }
                                 }]
                         };
-                        _a = eighty_1.eighty({ schema: schema }), router = _a.router, tearDown = _a.tearDown;
+                        _a = eighty_1.eighty({ schema: schema }).build(), router = _a.router, tearDown = _a.tearDown;
                         uut.use(router);
                         book = fixtures.books[0];
                         url = "/books/" + book._id.toString();
@@ -141,7 +141,7 @@ describe('authorization', function () {
                                     }
                                 }],
                         };
-                        _a = eighty_1.eighty({ schema: schema }), router = _a.router, init = _a.init, tearDown = _a.tearDown;
+                        _a = eighty_1.eighty({ schema: schema }).build(), router = _a.router, init = _a.init, tearDown = _a.tearDown;
                         uut.use(router);
                         return [4 /*yield*/, init()];
                     case 1:

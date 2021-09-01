@@ -75,9 +75,7 @@ var buildUpdateOp = function (_a) {
                     return [2 /*return*/, next()];
                 case 5:
                     req.resource = result;
-                    res.status(200)
-                        .send(result)
-                        .end();
+                    req.status = 200;
                     return [2 /*return*/, next()];
             }
         });

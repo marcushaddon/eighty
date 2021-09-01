@@ -46,8 +46,9 @@ var fixtures_1 = require("./fixtures");
 var mockAuth_1 = require("./fixtures/mockAuth");
 describe('create', function () {
     ['mongodb'].forEach(function (db) {
+        var testSchema = "\n        version: \"1.0.0\" \n\n        database:\n          type: " + db + "\n\n        resources:\n          - name: user\n            schemaPath: ./src/fixtures/schemas/user.yaml\n            operations:\n              create:\n                authentication: false\n          - name: book\n            schemaPath: ./src/fixtures/schemas/book.yaml\n            operations:\n              getOne:\n                authentication: false\n              create:\n                authentication: true\n\n        ";
         var fixtures;
-        var eightyRouter;
+        var builder;
         var uut;
         var tearDownEighty;
         beforeAll(function () { return __awaiter(void 0, void 0, void 0, function () {
@@ -58,10 +59,10 @@ describe('create', function () {
                     case 1:
                         fixtures = _b.sent();
                         uut = express_1.default();
-                        _a = eighty_1.eighty({
-                            schemaRaw: "\n                version: \"1.0.0\" \n\n                database:\n                  type: " + db + "\n\n                resources:\n                  - name: user\n                    schemaPath: ./src/fixtures/schemas/user.yaml\n                    operations:\n                      create:\n                        authentication: false\n                  - name: book\n                    schemaPath: ./src/fixtures/schemas/book.yaml\n                    operations:\n                      getOne:\n                        authentication: false\n                      create:\n                        authentication: true\n\n                "
-                        }), router = _a.router, tearDown = _a.tearDown;
-                        eightyRouter = router;
+                        builder = eighty_1.eighty({
+                            schemaRaw: testSchema,
+                        });
+                        _a = builder.build(), router = _a.router, tearDown = _a.tearDown;
                         uut.use(mockAuth_1.mockAuthenticator);
                         uut.use(router);
                         tearDownEighty = tearDown;
@@ -189,44 +190,6 @@ describe('create', function () {
                             }
                         }).expect(201)
                             .expect(function (res) { return expect(res.body.createdBy).toEqual('userAID'); })];
-                    case 1:
-                        _a.sent();
-                        return [2 /*return*/];
-                }
-            });
-        }); });
-        it(db + ": runs success callbacks", function () { return __awaiter(void 0, void 0, void 0, function () {
-            var mockFn1, mockFn2;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        mockFn1 = jest.fn();
-                        mockFn2 = jest.fn();
-                        eightyRouter
-                            .resources('book')
-                            .ops('create')
-                            .onSuccess(function (req, res) {
-                            mockFn1(req.resource);
-                        }).onSuccess(function (req) {
-                            mockFn2(req.resource);
-                            mockFn2(req.resource);
-                        });
-                        return [4 /*yield*/, supertest_1.default(uut)
-                                .post('/books')
-                                .set({ Authorization: 'userA' })
-                                .send({
-                                title: 'Test book',
-                                pages: 32,
-                                author: {
-                                    name: 'Test author',
-                                    age: 2354
-                                }
-                            }).expect(201)
-                                .expect(function (res) {
-                                expect(mockFn1).toHaveBeenCalledTimes(1);
-                                expect(mockFn2).toHaveBeenCalledTimes(2);
-                                expect(mockFn1.mock.calls[0][0]).toEqual(res.body);
-                            })];
                     case 1:
                         _a.sent();
                         return [2 /*return*/];

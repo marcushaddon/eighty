@@ -2,7 +2,7 @@ import { Handler } from "express";
 import { OperationName } from "./types/operation";
 import { HttpMethod } from "./const/operations";
 import { EightySchema } from "./types/schema";
-import { OpFailureCallback, OpSuccessCallback } from "./types/plugin";
+import { OpSuccessCallback, OpSubscriber } from "./types/plugin";
 export declare type RouteHandler = {
     method: HttpMethod;
     handler: Handler[];
@@ -10,14 +10,15 @@ export declare type RouteHandler = {
 };
 export declare class RouterBuilder {
     private readonly schema;
+    private built;
     private readonly db;
     private readonly successCallbacks;
     constructor(schema: EightySchema);
     /**
      * Creates routes and handlers to be registered on an Express router.
      */
-    createRoutesAndHandlers(): {
-        routesAndHandlers: RouteHandler[];
+    build(): {
+        router: import("express-serve-static-core").Express;
         init: () => Promise<void>;
         tearDown: () => Promise<void>;
     };
@@ -34,5 +35,7 @@ export declare class RouterBuilder {
     private buildRoute;
     private buildDocs;
     registerSuccessCallback(resourceName: string, op: OperationName, cb: OpSuccessCallback<any>): void;
-    registerFailureCallback(resourceName: string, op: OperationName, cb: OpFailureCallback): void;
+    resources(resourceName: string): {
+        ops: (op: OperationName) => OpSubscriber<any>;
+    };
 }

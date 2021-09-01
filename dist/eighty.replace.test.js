@@ -70,7 +70,7 @@ describe('replace', function () {
                         fixtures = _b.sent();
                         _a = eighty_1.eighty({
                             schemaRaw: "\n                version: \"1.0.0\"\n\n                database:\n                  type: mongodb\n                \n                resources:\n                  - name: user\n                    schemaPath: ./src/fixtures/schemas/user.yaml\n                    operations:\n                      getOne:\n                        authentication: false\n                      replace:\n                        authentication: true\n                  - name: book\n                    schemaPath: ./src/fixtures/schemas/book.yaml\n                    operations:\n                      getOne:\n                        authentication: false\n                      replace:\n                        authentication: false\n                "
-                        }), router = _a.router, init = _a.init, tearDown = _a.tearDown;
+                        }).build(), router = _a.router, init = _a.init, tearDown = _a.tearDown;
                         teardown = tearDown;
                         uut = express_1.default();
                         uut.use(mockAuth_1.mockAuthenticator);

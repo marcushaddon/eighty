@@ -87,7 +87,6 @@ var buildPatchValidator = function (validator, unknownFieldsPolicy) {
         try {
             for (var patches_1 = __values(patches), patches_1_1 = patches_1.next(); !patches_1_1.done; patches_1_1 = patches_1.next()) {
                 var _c = patches_1_1.value, op = _c.op, path = _c.path, value = _c.value;
-                console.log(path, value);
                 if (!(path in knownPaths)) {
                     if (unknownFieldsPolicy === 'reject') {
                         problems.push("Unknown path: " + path + ". Only known paths may be updated.");
@@ -99,7 +98,6 @@ var buildPatchValidator = function (validator, unknownFieldsPolicy) {
                 try {
                     for (var _d = (e_3 = void 0, __values(result.errors)), _e = _d.next(); !_e.done; _e = _d.next()) {
                         var res = _e.value;
-                        console.log('Got error', res);
                         problems.push([path, res.path].join('/').replace(/\/$/, '') + " " + res.message);
                     }
                 }

@@ -66,9 +66,7 @@ var buildCreateOp = function (_a) {
                     return [4 /*yield*/, db.create(resource, pending, createdBy)];
                 case 1:
                     created = _a.sent();
-                    res.status(201)
-                        .json(created)
-                        .end();
+                    req.status = 201;
                     req.resource = created;
                     return [2 /*return*/, next()];
             }

@@ -61,7 +61,7 @@ var buildDeleteOp = function (_a) {
                         .end();
                     return [2 /*return*/, next()];
                 case 4:
-                    res.status(204).end();
+                    req.status = 204;
                     return [2 /*return*/, next()];
             }
         });

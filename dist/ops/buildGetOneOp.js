@@ -75,10 +75,7 @@ var buildGetOneOp = function (_a) {
                         }
                     }
                     req.resource = result;
-                    res
-                        .status(200)
-                        .json(result)
-                        .end();
+                    req.status = 200;
                     return [2 /*return*/, next()];
             }
         });

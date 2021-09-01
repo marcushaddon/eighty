@@ -57,7 +57,6 @@ var mockAuth_1 = require("./fixtures/mockAuth");
 var fixtures_1 = require("./fixtures");
 describe('updateOp', function () {
     ['mongodb'].forEach(function (db) {
-        var eightyRouter;
         var uut;
         var fixtures;
         var teardown;
@@ -71,8 +70,7 @@ describe('updateOp', function () {
                         uut.use(mockAuth_1.mockAuthenticator);
                         _a = eighty_1.eighty({
                             schemaRaw: testSchema,
-                        }), router = _a.router, init = _a.init, tearDown = _a.tearDown;
-                        eightyRouter = router;
+                        }).build(), router = _a.router, init = _a.init, tearDown = _a.tearDown;
                         teardown = tearDown;
                         uut.use(router);
                         return [4 /*yield*/, fixtures_1.buildMongoFixtures()];
@@ -499,35 +497,27 @@ describe('updateOp', function () {
             });
         }); });
         // Book 11
-        it(db + ": correctly calls success callbacks", function () { return __awaiter(void 0, void 0, void 0, function () {
-            var book, url, mockFn;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        book = fixtures.books[11];
-                        url = "/books/" + book._id.toString();
-                        mockFn = jest.fn();
-                        eightyRouter
-                            .resources('book')
-                            .ops('update')
-                            .onSuccess(function (req) {
-                            mockFn(req.resource);
-                        });
-                        return [4 /*yield*/, supertest_1.default(uut)
-                                .patch(url)
-                                .set({ Authorization: 'userA' })
-                                .send([
-                                { op: 'add', path: '/themes/0', value: 'callbacks' }
-                            ]).expect(200)
-                                .expect(function (res) {
-                                expect(mockFn).toHaveBeenCalledTimes(1);
-                                expect(mockFn.mock.calls[0][0]).toEqual(res.body);
-                            })];
-                    case 1:
-                        _a.sent();
-                        return [2 /*return*/];
-                }
-            });
-        }); });
+        // it(`${db}: correctly calls success callbacks`, async () => {
+        //     const book = fixtures.books[11];
+        //     const url = `/books/${book._id.toString()}`;
+        //     const mockFn = jest.fn();
+        //     eightyRouter
+        //         .resources('book')
+        //         .ops('update')
+        //         .onSuccess((req, _, next) => {
+        //             mockFn(req.resource);
+        //             next();
+        //         });
+        //     await request(uut)
+        //         .patch(url)
+        //         .set({ Authorization: 'userA' })
+        //         .send([
+        //             { op: 'add', path: '/themes/0', value: 'callbacks' }
+        //         ]).expect(200)
+        //         .expect(res => {
+        //             expect(mockFn).toHaveBeenCalledTimes(1);
+        //             expect(mockFn.mock.calls[0][0]).toEqual(res.body);
+        //         });
+        // });
     });
 });

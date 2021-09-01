@@ -1,5 +1,5 @@
 import { EightySchema } from './types/schema';
-import { EightyRouter } from './types/plugin';
+import { RouterBuilder } from './RouterBuilder';
 declare type EightyOpts = {
     schema?: EightySchema;
     schemaRaw?: string;
@@ -7,9 +7,5 @@ declare type EightyOpts = {
 };
 export declare const readFile: (fp: string) => string;
 export declare const parseSchema: (contents: string) => EightySchema;
-export declare const eighty: (opts: EightyOpts) => {
-    init: () => Promise<void>;
-    tearDown: () => Promise<void>;
-    router: EightyRouter;
-};
+export declare const eighty: (opts: EightyOpts) => RouterBuilder;
 export {};

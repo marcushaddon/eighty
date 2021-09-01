@@ -47,7 +47,6 @@ var mockAuth_1 = require("./fixtures/mockAuth");
 describe('getOne', function () {
     ['mongodb'].forEach(function (db) {
         var fixtures;
-        var eightyRouter;
         var uut;
         var tearDownEighty;
         beforeAll(function () { return __awaiter(void 0, void 0, void 0, function () {
@@ -60,8 +59,7 @@ describe('getOne', function () {
                         uut = express_1.default();
                         _a = eighty_1.eighty({
                             schemaRaw: "\n                version: \"1.0.0\" \n\n                database:\n                  type: " + db + "\n\n                resources:\n                  - name: user\n                    schemaPath: ./src/fixtures/schemas/user.yaml\n                    operations:\n                      getOne:\n                        authentication: false\n                  - name: book\n                    operations:\n                      getOne:\n                        authentication: true\n                "
-                        }), router = _a.router, tearDown = _a.tearDown;
-                        eightyRouter = router;
+                        }).build(), router = _a.router, tearDown = _a.tearDown;
                         uut.use(mockAuth_1.mockAuthenticator);
                         uut.use(router);
                         tearDownEighty = tearDown;
@@ -151,40 +149,25 @@ describe('getOne', function () {
                 }
             });
         }); });
-        it(db + ": correctly calls success callbacks", function () { return __awaiter(void 0, void 0, void 0, function () {
-            var mockFn, existingId;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        mockFn = jest.fn();
-                        eightyRouter
-                            .resources('book')
-                            .ops('getOne')
-                            .onSuccess(function (req) { return __awaiter(void 0, void 0, void 0, function () {
-                            return __generator(this, function (_a) {
-                                switch (_a.label) {
-                                    case 0: return [4 /*yield*/, mockFn(req.resource)];
-                                    case 1:
-                                        _a.sent();
-                                        return [2 /*return*/];
-                                }
-                            });
-                        }); });
-                        existingId = fixtures.books[0]._id;
-                        return [4 /*yield*/, supertest_1.default(uut)
-                                .get("/books/" + existingId)
-                                .set({ Authorization: 'userA' })
-                                .send()
-                                .expect(200)
-                                .expect(function (res) {
-                                expect(mockFn).toHaveBeenCalledTimes(1);
-                                expect(mockFn.mock.calls[0][0]).toEqual(res.body);
-                            })];
-                    case 1:
-                        _a.sent();
-                        return [2 /*return*/];
-                }
-            });
-        }); });
+        // it(`${db}: correctly calls success callbacks`, async () => {
+        //     const mockFn = jest.fn();
+        //     eightyRouter
+        //         .resources('book')
+        //         .ops('getOne')
+        //         .onSuccess(async (req, res, next) => {
+        //             await mockFn(req.resource);
+        //             next();
+        //         });
+        //     const existingId = fixtures.books[0]._id;
+        //     await request(uut)
+        //         .get(`/books/${existingId}`)
+        //         .set({ Authorization: 'userA' })
+        //         .send()
+        //         .expect(200)
+        //         .expect(res => {
+        //             expect(mockFn).toHaveBeenCalledTimes(1);
+        //             expect(mockFn.mock.calls[0][0]).toEqual(res.body);
+        //         })
+        // });
     });
 });
