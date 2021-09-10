@@ -70,7 +70,7 @@ let mongo: MongoClient;
 let db: Db;
 export const buildMongoFixtures = async () => {
     if (!mongo) {
-        mongo = await MongoClient.connect(process.env.MONGO_URL!);
+        mongo = await MongoClient.connect(process.env.MONGO_URL!, { useUnifiedTopology: true });
         db = await mongo.db('local');
     }
 

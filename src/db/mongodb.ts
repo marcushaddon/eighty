@@ -25,7 +25,7 @@ export class MongoDbClient implements IDBClient {
 
     async connect(): Promise<void> {
         if (this.connected) return;
-        this.mongo = await MongoClient.connect(process.env.MONGO_URL!);
+        this.mongo = await MongoClient.connect(process.env.MONGO_URL!, { useUnifiedTopology: true });
         this.db = await this.mongo.db(this.dbName);
         this.connected = true;
     }

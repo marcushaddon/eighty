@@ -11,7 +11,7 @@ import { loadValidator } from "./buildResourceSchemas";
 import { buildInitLoggerMiddleware } from "./logging/buildInitLoggerMW";
 import { buildCreateOp } from "./ops/buildCreateOp";
 import { buildReplaceOp } from "./ops/buildReplaceOp";
-import { buildUpdateOp } from "./ops/buildUpdateOp";
+import { buildUpdateOp } from "./ops/buildupdateOp";
 import { buildDeleteOp } from "./ops/buildDeleteOp";
 import { buildGetOneOp } from "./ops/buildGetOneOp";
 import { buildListOp } from "./ops/buildListOp";
