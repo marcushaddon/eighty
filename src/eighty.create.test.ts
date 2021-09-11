@@ -1,12 +1,15 @@
 import express, { Express } from 'express';
 import request from 'supertest';
+import { v4 as uuid } from 'uuid';
 import { eighty } from './eighty';
-import { buildMongoFixtures, cleanupMongoFixtures } from './fixtures';
 import { mockAuthenticator } from './fixtures/mockAuth';
+import { mockDbClient } from './fixtures/mockDb';
 import { RouterBuilder } from './RouterBuilder';
 
+jest.mock('./db/mongodb', () => { })
+
 describe('create', () => {
-    ['mongodb'].forEach(db => {
+    ['mock'].forEach(db => { // TODO: dont loop over dbs
         const testSchema = `
         version: "1.0.0" 
 
@@ -28,13 +31,12 @@ describe('create', () => {
                 authentication: true
 
         `;
-        let fixtures: { users: any[]; books: any[] };
+
         let builder: RouterBuilder;
         let uut: Express;
         let tearDownEighty: () => Promise<void>;
 
         beforeAll(async () => {
-            fixtures = await buildMongoFixtures();
             uut = express();
 
             builder = eighty({
@@ -51,16 +53,24 @@ describe('create', () => {
 
         afterAll(async () => {
             await tearDownEighty();
-            await cleanupMongoFixtures();
         });
 
+        beforeEach(jest.clearAllMocks);
+
         it(`${db}: creates a valid resource`, async () => {
+            const mockUser = {
+                name: 'test-user',
+                age: 34
+            };
+            const mockCreatedUser = {
+                ...mockUser,
+                id: uuid(),
+            };
+            mockDbClient.create.mockResolvedValue(mockCreatedUser);
+
             await request(uut)
                 .post('/users')
-                .send({
-                    name: 'test-user',
-                    age: 34
-                })
+                .send(mockUser)
                 .expect(201)
                 .expect(res => {
                     expect(res.body.id).toBeDefined();
@@ -79,32 +89,40 @@ describe('create', () => {
         });
 
         it(`${db}: validates array field`, async () => {
+            const mockBook = {
+                title: 'test',
+                pages: 100,
+                author: {
+                    name: 'test author',
+                },
+                themes: [ 'technology' ]
+            };
+            const mockCreated = {
+                ...mockBook,
+                id: uuid(),
+            };
+            mockDbClient.create.mockResolvedValue(mockCreated);
             await request(uut)
                 .post('/books')
                 .set({ Authorization: 'userA' })
-                .send({
-                    title: 'test',
-                    pages: 100,
-                    author: {
-                        name: 'test author',
-                    },
-                    themes: [ 'technology' ]
-                }).expect(201);
+                .send(mockBook).expect(201);
         });
 
         it(`${db}: invalidates array field`, async () => {
+            const mockBook = {
+                title: 'test',
+                pages: 100,
+                author: {
+                    name: 'test',
+                    age: 345
+                },
+                themes: [ 'technology', { name: 'the future' }]
+            };
+
             await request(uut)
                 .post('/books')
                 .set({ Authorization: 'userA' })
-                .send({
-                    title: 'test',
-                    pages: 100,
-                    author: {
-                        name: 'test',
-                        age: 345
-                    },
-                    themes: [ 'technology', { name: 'the future' }]
-                }).expect(400);
+                .send(mockBook).expect(400);
         });
 
         it(`${db}: rejects unauthenticated request for authenticated op`, async () => {
@@ -117,18 +135,28 @@ describe('create', () => {
         });
 
         it(`${db}: accepts authenticated request for authenticated op`, async () => {
+            const mockBook = {
+                title: 'Authenticated Book',
+                pages: 24,
+                author: {
+                    name: 'Authorntentcated',
+                    age: 40
+                }
+            };
+            const mockCreated = {
+                ...mockBook,
+                id: uuid(),
+            };
+            mockDbClient.create.mockResolvedValue(mockCreated);
+            // TODO: dont do collaboration verification
+
             await request(uut)
                 .post('/books')
                 .set({ 'Authorization': 'userA' })
-                .send({
-                    title: 'Authenticated Book',
-                    pages: 24,
-                    author: {
-                        name: 'Authorntentcated',
-                        age: 40
-                    }
-                }).expect(201)
-                .expect(res => expect(res.body.createdBy).toEqual('userAID'));
+                .send(mockBook).expect(201)
+                .expect(res => {
+                    expect(mockDbClient.create.mock.calls[0][2]).toEqual('userAID');
+                });
         });
     });
 });
