@@ -1,9 +1,13 @@
 import express, { Handler, Express } from 'express';
 import request from 'supertest';
+import { v4 as uuid } from 'uuid';
 import { buildMongoFixtures, cleanupMongoFixtures } from './fixtures';
 import { mockAuthenticator } from './fixtures/mockAuth';
+import { mockDbClient } from './fixtures/mockDb';
 import { eighty } from './eighty';
 import { EightyRouter } from './types/plugin';
+import { NotFoundError } from './errors';
+import { loadSchema } from './buildResourceSchemas';
 
 describe('delete', () => {
     ['mongodb'].forEach(db => {
@@ -16,14 +20,12 @@ describe('delete', () => {
         let teardownEighty: () => Promise<void>;
 
         beforeAll(async () => {
-            fixtures = await buildMongoFixtures();
-
             const { router, tearDown } = eighty({
                 schemaRaw: `
                 version: "1.0.0"
 
                 database:
-                  type: mongodb
+                  type: mock
                 
                 resources:
                   - name: user
@@ -53,12 +55,32 @@ describe('delete', () => {
         
         afterAll(async () => {
             await teardownEighty();
-            await cleanupMongoFixtures();
         });
 
+        beforeEach(jest.clearAllMocks);
+
         it(`${db}: performs unauthenticated delete`, async () => {
-            const book = fixtures.books[0];
-            const url = `/books/${book._id.toString()}`;
+            const mockBook = {
+                id: uuid(),
+                title: 'mock',
+                pages: 123,
+                author: {
+                    name: 'author',
+                }
+            };
+
+            const mockBooks = {
+                [mockBook.id]: mockBook,
+            }
+            mockDbClient.delete.mockImplementation((_, id) => delete mockBooks[id]);
+            mockDbClient.getById.mockImplementation((_, id) => {
+                if (mockBooks[id]) {
+                    return mockBooks[id];
+                }
+
+                throw new NotFoundError('Unable to find book with id: ' + id);
+            })
+            const url = `/books/${mockBook.id}`;
 
             await request(uut)
                 .delete(url)
@@ -72,8 +94,20 @@ describe('delete', () => {
         });
 
         it(`${db}: rejects unauthenticated request for authenticated op`, async () => {
-            const user = fixtures.users[1];
-            const url = `/users/${user._id.toString()}`;
+            const user = {
+                name: 'mock',
+                id: uuid(),
+            }
+            const mockUsers = {
+                [user.id]: user
+            };
+
+            mockDbClient.getById.mockImplementation((_, id) => {
+                if (mockUsers[id]) return mockUsers[id];
+                throw new NotFoundError('Cannot find user with id: ' + id);
+            });
+            mockDbClient.delete.mockImplementation((_, id) => delete mockUsers[id]);
+            const url = `/users/${user.id}`;
 
             await request(uut)
                 .delete(url)
@@ -88,8 +122,22 @@ describe('delete', () => {
         });
 
         it(`${db}: performs authenticated op`, async () => {
-            const user = fixtures.users[0];
-            const url = `/users/${user._id.toString()}`;
+            const user = {
+                name: 'mock',
+                id: uuid(),
+            };
+
+            const mockUsers = {
+                [user.id]: user,
+            };
+
+            mockDbClient.getById.mockImplementation((_, id) => {
+                if (mockUsers[id]) return mockUsers[id];
+                throw new NotFoundError('Cannot find user with id: ' + id);
+            });
+            mockDbClient.delete.mockImplementation((_, id) => delete mockUsers[id]);
+
+            const url = `/users/${user.id}`;
 
             await request(uut)
                 .delete(url)
@@ -102,30 +150,5 @@ describe('delete', () => {
                 .send()
                 .expect(404);
         });
-
-        // it(`${db}: correctly runs success callbacks`, async () => {
-        //   const user = fixtures.users[1];
-        //   const url = `/users/${user._id.toString()}`;
-
-        //   const mockFn = jest.fn();
-
-        //   eightyRouter
-        //     .resources('user')
-        //     .ops('delete')
-        //     .onSuccess((req, _, next) => {
-        //       mockFn(req.resource);
-        //       next();
-        //     });
-          
-        //   await request(uut)
-        //     .delete(url)
-        //     .set({ Authorization: 'userA' })
-        //     .send()
-        //     .expect(204)
-        //     .expect(res => {
-        //       expect(mockFn).toHaveBeenCalledTimes(1);
-        //       expect(mockFn.mock.calls[0][0].id).toEqual(user._id.toString());
-        //     })
-        // });
     })
 });

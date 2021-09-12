@@ -143,19 +143,19 @@ describe('create', () => {
                     age: 40
                 }
             };
-            const mockCreated = {
-                ...mockBook,
+            mockDbClient.create.mockImplementation(async (_, pending, createdBy) => ({
+                ...pending,
                 id: uuid(),
-            };
-            mockDbClient.create.mockResolvedValue(mockCreated);
-            // TODO: dont do collaboration verification
+                createdBy,
+            }));
 
             await request(uut)
                 .post('/books')
                 .set({ 'Authorization': 'userA' })
                 .send(mockBook).expect(201)
                 .expect(res => {
-                    expect(mockDbClient.create.mock.calls[0][2]).toEqual('userAID');
+                    expect(res.body.createdBy).toEqual('userAID');
+                    expect(res.body.title).toEqual(mockBook.title);
                 });
         });
     });
