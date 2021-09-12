@@ -12,10 +12,6 @@ import { loadSchema } from './buildResourceSchemas';
 describe('delete', () => {
     ['mongodb'].forEach(db => {
         let uut: Express;
-        let fixtures: {
-            books: any[],
-            users: any[]
-        };
 
         let teardownEighty: () => Promise<void>;
 

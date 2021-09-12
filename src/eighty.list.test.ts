@@ -213,26 +213,5 @@ describe('list', () => {
                 })
         });
 
-        // it(`${db}: correctly calls success callback`, async () => {
-        //     const mockFn = jest.fn();
-
-        //     eightyRouter
-        //         .resources('book')
-        //         .ops('list')
-        //         .onSuccess((req, _, next) => {
-        //             mockFn(req.resource);
-        //             next();
-        //         });
-            
-        //     await request(uut)
-        //         .get('/books')
-        //         .set({ Authorization: 'userA' })
-        //         .send()
-        //         .expect(200)
-        //         .expect(res => {
-        //             expect(mockFn).toHaveBeenCalledTimes(1);
-        //             expect(mockFn.mock.calls[0][0]).toEqual(res.body);
-        //         });
-        // });
     });
 });

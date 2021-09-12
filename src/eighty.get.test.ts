@@ -1,18 +1,24 @@
 import express, { Express } from 'express';
 import request from 'supertest';
+import { v4 as uuid } from 'uuid';
 import { eighty } from './eighty';
+import { NotFoundError } from './errors';
 import { buildMongoFixtures, cleanupMongoFixtures } from './fixtures'; 
 import { mockAuthenticator } from './fixtures/mockAuth';
+import { mockDbClient } from './fixtures/mockDb';
 import { EightyRouter } from './types/plugin';
 
 describe('getOne', () => {
     ['mongodb'].forEach(db => {
-        let fixtures: any;
         let uut: Express;
         let tearDownEighty: () => Promise<void>;
+        let user: any;
+        let book: any;
+        let fixtures: {
+            [ resourceName: string ]: { [ id: string ]: any };
+        };
 
         beforeAll(async () => {
-            fixtures = await buildMongoFixtures();
             uut = express();
 
             const { router, tearDown } = eighty({
@@ -20,7 +26,7 @@ describe('getOne', () => {
                 version: "1.0.0" 
 
                 database:
-                  type: ${db}
+                  type: mock
 
                 resources:
                   - name: user
@@ -42,18 +48,43 @@ describe('getOne', () => {
 
         afterAll(async () => {
             await tearDownEighty();
-            await cleanupMongoFixtures();
         });
 
+        beforeEach(() => {
+            user = {
+                name: 'mock',
+                id: uuid(),
+            };
+
+            book = {
+                title: 'mock',
+                pages: 123,
+                id: uuid(),
+            }
+            fixtures = {
+                users: { [ user.id ]: user },
+                books: { [ book.id ]: book },
+            };
+
+            mockDbClient.getById.mockImplementation((resource, id) => {
+                if (fixtures[resource.name + 's']?.[id]) {
+                    return fixtures[resource.name + 's']?.[id];
+                }
+
+                throw new NotFoundError(`Unable to find ${resource.name} with id ${id}`);
+            });
+        });
+
+        afterEach(jest.clearAllMocks);
 
         it(`${db}: gets existing resource`, async () => {
-            const existingId = fixtures.users[0]._id.toString();
+            const existingId = user.id;
 
             await request(uut)
             .get(`/users/${existingId}`)
             .send()
             .expect(200)
-            .expect(res => expect(res.body.id).toEqual(existingId.toString()));
+            .expect(res => expect(res.body.id).toEqual(existingId));
         });
         
         it(`${db}: 404s for non existant resource`, async () => {
@@ -66,7 +97,7 @@ describe('getOne', () => {
         });
 
         it(`${db}: rejects unauthenticated request for authenticated op`, async () => {
-            const existingId = fixtures.books[0]._id;
+            const existingId = book.id;
             await request(uut)
                 .get(`/books/${existingId}`)
                 .send()
@@ -74,37 +105,15 @@ describe('getOne', () => {
         });
 
         it(`${db}: allows authenticated request for authenticated op`, async () => {
-            const existingId = fixtures.books[0]._id;
+            const existingId = book.id;
             await request(uut)
                 .get(`/books/${existingId}`)
                 .set({ Authorization: 'userB' })
                 .send()
                 .expect(200)
                 .expect(res => {
-                    expect(res.body.id).toEqual(existingId.toString());
+                    expect(res.body.id).toEqual(existingId);
                 });
         });
-
-        // it(`${db}: correctly calls success callbacks`, async () => {
-        //     const mockFn = jest.fn();
-        //     eightyRouter
-        //         .resources('book')
-        //         .ops('getOne')
-        //         .onSuccess(async (req, res, next) => {
-        //             await mockFn(req.resource);
-        //             next();
-        //         });
-
-        //     const existingId = fixtures.books[0]._id;
-        //     await request(uut)
-        //         .get(`/books/${existingId}`)
-        //         .set({ Authorization: 'userA' })
-        //         .send()
-        //         .expect(200)
-        //         .expect(res => {
-        //             expect(mockFn).toHaveBeenCalledTimes(1);
-        //             expect(mockFn.mock.calls[0][0]).toEqual(res.body);
-        //         })
-        // });
     });
 });
