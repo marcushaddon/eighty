@@ -1,12 +1,9 @@
 import express, { Express } from 'express';
-import { ObjectId } from 'mongodb';
-import supertest from 'supertest';
-import dm from 'deepmerge';
 import request from 'supertest';
 import { eighty } from './eighty';
 import { EightySchema } from './types/schema';
 import { buildMongoFixtures, cleanupMongoFixtures } from './fixtures'; 
-import { mockAuthenticator, fixtureAuthenticator } from './fixtures/mockAuth';
+import { mockAuthenticator } from './fixtures/mockAuth';
 
 describe('authorization', () => {
     ['mongodb'].forEach(db => {

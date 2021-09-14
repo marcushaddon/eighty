@@ -127,6 +127,9 @@ const buildAuthDescriptionTemplate = (op: Operation): string => {
     }
 
     if (op.authorization) {
+        if (op.authorization === 'custom') {
+            return 'This operation implements custom authorization';
+        } 
         const { allOf, anyOf } = op.authorization;
         const requirements = (allOf || anyOf)!
             .map((config): string => {

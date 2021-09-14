@@ -60,7 +60,6 @@ describe('plugins', () => {
         });
         mockDbClient.getById.mockImplementation((resource, id) => {
             const existing = mockDb[resource.name + 's']?.[id];
-            console.log('EXISTING', existing);
             if (!existing) throw new NotFoundError('Unable to find mock resource');
 
             return existing;

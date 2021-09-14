@@ -154,7 +154,6 @@ export class RouterBuilder {
         const callbacks = this.successCallbacks[resource.name]?.[op]
 
         if (callbacks) {
-            console.log('Pushing callback for', resource.name, op);
             callbacks.forEach(cb => middlewares.push(cb as Handler));
         }
 

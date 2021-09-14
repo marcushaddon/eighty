@@ -95,6 +95,7 @@ const explainFail = (
 }
 
 export const buildAuthorization = (resource: Resource, config: AuthorizationSchema): Handler => {
+    if (config === "custom") throw new Error('NOT IMPLEMENTED');
     const mode = 'allOf' in config ? 'allOf' : 'anyOf'; // We can assume only one is set
 
     const checkFuncs = config[mode]!.map(checkConfig => checkBuilders[checkConfig.type](checkConfig));
