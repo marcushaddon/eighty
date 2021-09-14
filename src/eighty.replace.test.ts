@@ -1,13 +1,19 @@
 import express, { Handler, Express } from 'express';
 import request from 'supertest';
+import { v4 as uuid } from 'uuid';
 import { eighty } from './eighty';
+import { NotFoundError } from './errors';
 import { buildMongoFixtures, cleanupMongoFixtures } from './fixtures';
 import { mockAuthenticator } from "./fixtures/mockAuth";
+import { mockDbClient } from './fixtures/mockDb';
 
 describe('replace', () => {
     ['mongodb'].forEach(db => {
-        let cleanup: () => Promise<void>;
         let teardown: () => Promise<void>;
+        let user: any;
+        let book: any;
+        let mockDb: any;
+
         let fixtures: {
             users: any[];
             books: any[];
@@ -15,13 +21,12 @@ describe('replace', () => {
         let uut: Express;
 
         beforeAll(async() => {
-            fixtures = await buildMongoFixtures();
             const { router, init, tearDown } = eighty({
                 schemaRaw: `
                 version: "1.0.0"
 
                 database:
-                  type: mongodb
+                  type: mock
                 
                 resources:
                   - name: user
@@ -53,12 +58,52 @@ describe('replace', () => {
 
         afterAll(async() => {
             await teardown();
-            await cleanupMongoFixtures();
         });
 
+        beforeEach(() => {
+            user = {
+                name: 'mockusers',
+                id: uuid(),
+            };
+
+            book = {
+                title: 'mock book',
+                pages: 234,
+                author: {
+                    name: 'mock author',
+                    age: 24,
+                },
+                themes: [ 'war', 'peace' ],
+                id: uuid()
+            };
+
+            mockDb = {
+                books: {
+                    [book.id]: book,
+                },
+                users: {
+                    [user.id]: user
+                }
+            };
+
+            mockDbClient.replace.mockImplementation((resource, id, replacement, replacerId) => {
+                const existing = mockDb[resource.name + 's']?.[id];
+                if (!existing) throw new NotFoundError('Unable to find mock resource');
+                mockDb[resource.name+'s'][id] = { ...replacement, id };
+            });
+
+            mockDbClient.getById.mockImplementation((resource, id) => {
+                const res = mockDb[resource.name + 's']?.[id];
+                if (res) return res;
+
+                throw new NotFoundError('Unable to find mock resource');
+            });
+        });
+
+        afterEach(jest.clearAllMocks);
+
         it(`${db}: rejects invalid replace`, async () => {
-            const book = fixtures.books[0];
-            const url = `/books/${book._id.toString()}`;
+            const url = `/books/${book.id}`;
 
             await request(uut)
                 .put(url)
@@ -69,8 +114,7 @@ describe('replace', () => {
         });
 
         it(`${db}: rejects unauthorized replace for authorized op`, async () => {
-            const book = fixtures.users[0];
-            const url = `/users/${book._id.toString()}`;
+            const url = `/users/${book.id}`;
 
             await request(uut)
                 .put(url)
@@ -79,8 +123,7 @@ describe('replace', () => {
         })
 
         it(`${db}: performs valid unauthenticated replace`, async () => {
-            const book = fixtures.books[0];
-            const url = `/books/${book._id.toString()}`;
+            const url = `/books/${book.id}`;
 
             const newBook = {
                 title: 'New title',
@@ -93,7 +136,7 @@ describe('replace', () => {
 
             const expected = {
                 ...newBook,
-                id: book._id.toString()
+                id: book.id
             };
 
             await request(uut)
@@ -107,8 +150,7 @@ describe('replace', () => {
         });
 
         it(`${db}: performs valid authenticated replace`, async () => {
-            const user = fixtures.users[1];
-            const url = `/users/${user._id.toString()}`;
+            const url = `/users/${user.id}`;
 
             const newUser = {
                name: 'New person',
@@ -120,7 +162,7 @@ describe('replace', () => {
 
             const expected = {
                 ...newUser,
-                id: user._id.toString()
+                id: user.id
             };
 
             await request(uut)
@@ -136,7 +178,7 @@ describe('replace', () => {
         });
 
         it(`${db}: performds valid replace with nested array fields`, async () => {
-            const url = `/books/${fixtures.books[0]._id.toString()}`;
+            const url = `/books/${book.id}`;
             await request(uut)
                 .put(url)
                 .send({
@@ -150,7 +192,7 @@ describe('replace', () => {
         });
 
         it(`${db}: rejects invalid replace with nested array fields`, async () => {
-            const url = `/books/${fixtures.books[0]._id.toString()}`;
+            const url = `/books/${book.id}`;
             await request(uut)
                 .put(url)
                 .send({

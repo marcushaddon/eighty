@@ -34,10 +34,8 @@ export const buildListOp: OpBuilder = ({
             result = await db.list(params);
         } catch (e) {
             (req as any).error = e;
-            res
-                .status(e.status || 500)
-                .json({ message: e.message || 'Internal server error' + e })
-                .end();
+            (req as any).status = e.status || 500;
+    
             return next();
         }
         
@@ -48,10 +46,8 @@ export const buildListOp: OpBuilder = ({
                 result.results.forEach(res => (req as any).authorizer(res));
             } catch (e) {
                 (req as any).error = e;
-                res
-                    .status(e.status || 500)
-                    .json({ message: e.message || 'Internal server error' + e })
-                    .end();
+                (req as any).status = e.status || 500;
+
                 return next();
             }
         }

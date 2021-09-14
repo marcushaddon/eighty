@@ -154,6 +154,7 @@ export class RouterBuilder {
         const callbacks = this.successCallbacks[resource.name]?.[op]
 
         if (callbacks) {
+            console.log('Pushing callback for', resource.name, op);
             callbacks.forEach(cb => middlewares.push(cb as Handler));
         }
 
@@ -161,6 +162,12 @@ export class RouterBuilder {
         middlewares.push((req, res) => {
             const status = (req as any).status || 500;
             const resource = (req as any).resource;
+            const error = (req as any).error;
+
+            if (error) {
+                (req as any).logger.error(`Encountered error performing ${op} on ${resource.name}`, error);
+                return res.status(status).json(error).end();
+            }
 
             return res.status(status).json(resource).end();
         });

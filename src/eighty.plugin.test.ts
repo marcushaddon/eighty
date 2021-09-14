@@ -1,16 +1,20 @@
 import request from "supertest";
 import express, { Express } from 'express';
+import { v4 as uuid } from 'uuid';
 import { eighty } from ".";
-import { buildMongoFixtures, cleanupMongoFixtures } from './fixtures'; 
+import { mockDbClient } from "./fixtures/mockDb";
 import { mockAuthenticator } from './fixtures/mockAuth';
 import { EightySchema } from "./types/schema";
+import { NotFoundError } from "./errors";
 
 describe('plugins', () => {
-    let fixtures: any;
+    let books: any[];
+    let mockDb: any;
     let uut: Express;
+
     const testSchema: EightySchema = {
         version: '1.0.0',
-        database: { type: 'mongodb' },
+        database: { type: 'mock' },
         resources: [
             {
                 name: 'book',
@@ -30,13 +34,44 @@ describe('plugins', () => {
         ]
     };
 
-    beforeAll(async () => {
-        fixtures = await buildMongoFixtures();
-    });
+    beforeEach(() => {
+        books = [ ...Array(30) ].map((_, i) => ({
+            title: 'mock book',
+            pages: 5 * i,
+            id: uuid(),
+        }));
+        mockDb = {
+            books: {}
+        };
 
-    afterAll(async () => {
-        console.log('CLEARNING UP?');
-        await cleanupMongoFixtures();
+        for (const book of books) {
+            mockDb.books[book.id] = book;
+        }
+
+        mockDbClient.create.mockImplementation((resource, pending, createdBy) => {
+            const created = {
+                ...pending,
+                id: uuid(),
+                createdBy,
+            }
+            mockDb[resource.name + 's'][created.id] = created;
+
+            return created;
+        });
+        mockDbClient.getById.mockImplementation((resource, id) => {
+            const existing = mockDb[resource.name + 's']?.[id];
+            console.log('EXISTING', existing);
+            if (!existing) throw new NotFoundError('Unable to find mock resource');
+
+            return existing;
+        });
+        mockDbClient.list.mockImplementation(({ resource }) => {
+            const res = Object.values(mockDb[resource.name + 's']);
+            return {
+                results: res,
+                total: res.length,
+            }
+        });
     });
 
     it('runs passthrough plugin on create', async () => {
@@ -94,9 +129,10 @@ describe('plugins', () => {
         uut.use(mockAuthenticator);
         uut.use(router);
 
-        const bookId = fixtures.books[0]._id.toString();
+        const bookId = books[0].id;
+        const url = `/books/${bookId}`;
         await request(uut)
-            .get(`/books/${bookId}`)
+            .get(url)
             .send()
             .expect(420)
             .expect(res => expect(res.body.title).toEqual('MODIFIED'))
@@ -113,7 +149,10 @@ describe('plugins', () => {
                 const filtered = (req.resource.results as any[])
                     .filter((_, idx) => idx % 2 === 0);
                 
-                res.json(filtered).end();
+                res.json({
+                    ...req.resource,
+                    results: filtered,
+                }).end();
             });
     
         const { router, tearDown } = builder.build();
@@ -123,8 +162,8 @@ describe('plugins', () => {
             .send()
             .expect(200)
             .expect(res => {
-                expect(res.body.length).toBeLessThanOrEqual(
-                    fixtures.books.length / 2 + 1
+                expect(res.body.results.length).toBeLessThanOrEqual(
+                    books.length / 2 + 1
                 )
             }).then(async () => await tearDown());
     });
