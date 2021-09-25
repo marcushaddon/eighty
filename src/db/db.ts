@@ -31,7 +31,7 @@ export const resolveDbClient = (dbConfig: Database): IDBClient => {
 }
 
 export const DbClients = new Map<string, () => IDBClient>([
-    // [ 'mock', () => mockDbClient ],
+    [ 'mock', () => mockDbClient ],
     // [ 'postgres', () => new PostgresClient() ],
     [ 'mongodb', () => new MongoDbClient() ],
 ]);
