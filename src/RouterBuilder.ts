@@ -68,6 +68,8 @@ export class RouterBuilder {
     
         const flattened = resourceRoutes
             .reduce((acc, current) => [ ...acc, ...current ]);
+
+        const docs = this.buildDocs(this.schema);
         
         const docsRouteHandlers: RouteHandler[] = [{
             method: 'use' as HttpMethod,
@@ -75,8 +77,12 @@ export class RouterBuilder {
             handler: OpenApi.serve,
         }, {
             method: 'get',
+            route: '/api.json',
+            handler: [(_, res) => res.json(docs).end()]
+        },{
+            method: 'get',
             route: '/docs',
-            handler: [OpenApi.setup(this.buildDocs(this.schema))]
+            handler: [OpenApi.setup(docs)]
         }];
 
         const withDocs = [ ...flattened, ...docsRouteHandlers ];

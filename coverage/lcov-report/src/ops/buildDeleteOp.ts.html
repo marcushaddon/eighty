@@ -23,9 +23,9 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">13.33% </span>
+                <span class="strong">80% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>2/15</span>
+                <span class='fraction'>12/15</span>
             </div>
         
             
@@ -37,16 +37,16 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>0/3</span>
+                <span class='fraction'>3/3</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">9.09% </span>
+                <span class="strong">72.73% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>1/11</span>
+                <span class='fraction'>8/11</span>
             </div>
         
             
@@ -55,7 +55,7 @@
             Press <em>n</em> or <em>j</em> to go to the next uncovered block, <em>b</em>, <em>p</em> or <em>k</em> for the previous block.
         </p>
     </div>
-    <div class='status-line low'></div>
+    <div class='status-line high'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -86,37 +86,37 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">8x</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { Handler } from "express";
 import { OpBuilder } from ".";
 &nbsp;
-export const buildDeleteOp: OpBuilder = <span class="fstat-no" title="function not covered" >({</span> resource<span class="cstat-no" title="statement not covered" >, d</span>b<span class="cstat-no" title="statement not covered" > })</span>: Handler =&gt; {
-    const deleteOne: Handler = <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >async (r</span>eq, res, next<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >) =&gt; {</span></span></span>
-        const <span class="cstat-no" title="statement not covered" >id = req.params.id;</span>
-        (<span class="cstat-no" title="statement not covered" >req as any).resource = { id };</span>
+export const buildDeleteOp: OpBuilder = ({ resource, db }): Handler =&gt; {
+    const deleteOne: Handler = async (req, res, next) =&gt; {
+        const id = req.params.id;
+        (req as any).resource = { id };
 &nbsp;
         try {
-<span class="cstat-no" title="statement not covered" >            await db.delete(resource.name, id);</span>
+            await db.delete(resource.name, id);
         } catch (e) {
             (<span class="cstat-no" title="statement not covered" >req as any).error = e;</span>
 <span class="cstat-no" title="statement not covered" >            res.status(e.status || 500)</span>
@@ -125,12 +125,12 @@ export const buildDeleteOp: OpBuilder = <span class="fstat-no" title="function n
 <span class="cstat-no" title="statement not covered" >            return next();</span>
         }
 &nbsp;
-        (<span class="cstat-no" title="statement not covered" >req as any).status = 204;</span>
+        (req as any).status = 204;
 &nbsp;
-<span class="cstat-no" title="statement not covered" >        return next();</span>
+        return next();
     };
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    return deleteOne;</span>
+    return deleteOne;
 }
 &nbsp;</pre></td></tr></table></pre>
 
@@ -139,7 +139,7 @@ export const buildDeleteOp: OpBuilder = <span class="fstat-no" title="function n
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank">istanbul</a>
-                at Mon Aug 30 2021 12:00:05 GMT-0700 (Pacific Daylight Time)
+                at Tue Sep 14 2021 10:52:06 GMT-0700 (Pacific Daylight Time)
             </div>
         </div>
         <script src="../../prettify.js"></script>
