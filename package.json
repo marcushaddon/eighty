@@ -4,7 +4,7 @@
   "description": "",
   "main": "./dist/index.js",
   "scripts": {
-    "test": "jest --detectOpenHandles --coverage .",
+    "test": "jest --detectOpenHandles --coverage ./src",
     "build": "tsc -p ./tsconfig.json"
   },
   "publishConfig": {
