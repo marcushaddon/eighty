@@ -74,6 +74,21 @@ describe('plugins', () => {
     });
 
     it('runs passthrough plugin on create', async () => {
+        const mockBook = {
+            title: 'foobook',
+            pages: 5,
+            author: {
+                name: 'chrill',
+                age: 20,
+            }
+        };
+
+        const mockCreated = {
+            ...mockBook,
+            id: uuid()
+        }
+
+        mockDbClient.create.mockResolvedValue(mockCreated);
         const builder = eighty({ schema: testSchema });
         const mockFn = jest.fn();
         builder
@@ -93,14 +108,7 @@ describe('plugins', () => {
         await request(uut)
             .post('/books')
             .set({ 'Authorization': 'userA' })
-            .send({
-                title: 'foobook',
-                pages: 5,
-                author: {
-                    name: 'chrill',
-                    age: 20,
-                }
-            }).expect(201)
+            .send(mockBook).expect(201)
             .expect(res => {
                 expect(mockFn).toHaveBeenCalledTimes(1);
                 expect(mockFn).toHaveBeenCalledWith(
