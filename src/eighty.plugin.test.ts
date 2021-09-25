@@ -73,7 +73,95 @@ describe('plugins', () => {
         });
     });
 
-    it('runs passthrough plugin on create', async () => {
+    it('runs passthrough pre plugin on getOne', async () => {
+        const book = books[0];
+        const builder = eighty({ schema: testSchema });
+        const mockFn = jest.fn();
+        builder.resources('book')
+            .ops('getOne')
+            .beforeOp((req, res, next) => {
+                mockFn();
+                next();
+            })
+        
+        const { router, tearDown } = builder.build();
+        const uut = express();
+        uut.use(mockAuthenticator);
+        uut.use(router);
+
+        await request(uut)
+            .get(`/books/${book.id}`)
+            .send()
+            .expect(200)
+            .expect(res => {
+                expect(mockFn).toHaveBeenCalledTimes(1);
+            }).then(async () => await tearDown());
+    });
+
+    // TODO: is this even possible?
+    it.skip('runs effectful pre plugin on create', async () => {});
+
+    it('runs short circuit pre plugin on create', async () => {
+        const shortBook = {
+            title: 'short',
+            pages: 20,
+            author: {
+                name: 'quick'
+            }
+        };
+        const longBook = {
+            title: 'long',
+            pages: 2000,
+            author: {
+                name: 'blowhard'
+            }
+        };
+        const mockFn = jest.fn();
+
+        const builder = eighty({ schema: testSchema });
+        builder.resources('book')
+            .ops('create')
+            .beforeOp((req, res, next) => {
+                const pending = req.body;
+                if (pending.pages < 100) {
+                    return next();
+                }
+
+                mockFn(pending.pages);
+
+                res.status(400)
+                    .send({ message: 'TLDR BRO' })
+                    .end();
+            });
+
+        const { router, tearDown } = builder.build();
+        const uut = express();
+        uut.use(mockAuthenticator);
+        uut.use(router);
+
+        await request(uut)
+            .post('/books')
+            .set({ Authorization: 'userA' })
+            .send(shortBook)
+            .expect(201)
+            .expect(res => {
+                expect(res.body.title).toEqual('short');
+                expect(mockFn).toHaveBeenCalledTimes(0);
+            });
+        
+        await request(uut)
+            .post('/books')
+            .set({ Authorization: 'userA' })
+            .send(longBook)
+            .expect(400)
+            .expect(res => {
+                expect(res.body.message).toEqual('TLDR BRO');
+                expect(mockFn).toHaveBeenCalledTimes(1);
+                expect(mockFn).toHaveBeenCalledWith(longBook.pages);
+            })
+    });
+
+    it('runs passthrough post plugin on create', async () => {
         const mockBook = {
             title: 'foobook',
             pages: 5,
@@ -118,7 +206,7 @@ describe('plugins', () => {
             .then(async () => await tearDown());
     });
 
-    it('runs effectful plugin on getOne', async () => {
+    it('runs effectful post plugin on getOne', async () => {
         const builder = eighty({ schema: testSchema });
 
         builder
@@ -146,7 +234,7 @@ describe('plugins', () => {
             .then(async () => await tearDown());
     });
 
-    it('runs short circuit plugin on list', async () => {
+    it('runs short circuit post plugin on list', async () => {
         const builder = eighty({ schema: testSchema });
 
         builder
