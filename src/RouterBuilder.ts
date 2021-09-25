@@ -24,7 +24,7 @@ import { buildPatchValidationMiddleware } from "./validation/buildPatchValidator
 import { buildListValidationMiddleware} from "./validation/buildListValidator";
 import { buildAuthorization } from "./auth/authorization";
 import { buildDocs } from "./documentation";
-import { OpSuccessCallback, OpSubscriber } from "./types/plugin";
+import { PluginMiddleware, OpSubscriber } from "./types/plugin";
 
 
 
@@ -34,14 +34,17 @@ export type RouteHandler = {
     route: string,
 };
 
+export type PluginMap = {
+    [ resourceName: string ]: {
+        [ op: string ]: PluginMiddleware<any>[]
+    }
+};
+
 export class RouterBuilder {
     private built = false;
     private readonly db: IDBClient;
-    private readonly successCallbacks: {
-        [ resourceName: string ]: {
-            [ op: string ]: OpSuccessCallback<any>[]
-        }
-    } = {};
+    private readonly preOpPlugins: PluginMap = {};
+    private readonly postOpPlugins: PluginMap = {};
 
     constructor(private readonly schema: EightySchema) {
         this.db = resolveDbClient(schema.database);
@@ -141,6 +144,11 @@ export class RouterBuilder {
             middlewares.push(authorizationMW);
         }
 
+        const preOpPlugins = this.preOpPlugins[resource.name]?.[op];
+        if (preOpPlugins) {
+            preOpPlugins.forEach(pi => middlewares.push(pi as Handler));
+        }
+
         if (resource.schemaPath) {
             const validationBuilder = getValidationBuilder(op);
             const validationMW = validationBuilder(resource);
@@ -157,10 +165,10 @@ export class RouterBuilder {
         middlewares.push(opMW);
 
         // TODO: rename to plugin
-        const callbacks = this.successCallbacks[resource.name]?.[op]
+        const postOpPlugins = this.postOpPlugins[resource.name]?.[op];
 
-        if (callbacks) {
-            callbacks.forEach(cb => middlewares.push(cb as Handler));
+        if (postOpPlugins) {
+            postOpPlugins.forEach(pi => middlewares.push(pi as Handler));
         }
 
         // Finisher
@@ -190,14 +198,19 @@ export class RouterBuilder {
         return buildDocs(schema);
     }
 
-    public registerSuccessCallback(resourceName: string, op: OperationName, cb: OpSuccessCallback<any>) {
+    public registerPlugin(
+        pluginMap: PluginMap,
+        resourceName: string,
+        op: OperationName,
+        pi: PluginMiddleware<any>
+    ) {
         if (this.built) {
             throw new Error('Invalid use of RouterBuilder fluent API: Op middleware plugins must be registered before calling "build()"');
         }
 
-        if (!this.successCallbacks[resourceName]) this.successCallbacks[resourceName] = {};
-        if (!this.successCallbacks[resourceName][op]) this.successCallbacks[resourceName][op] = [];
-        this.successCallbacks[resourceName][op].push(cb);
+        if (!pluginMap[resourceName]) pluginMap[resourceName] = {};
+        if (!pluginMap[resourceName][op]) pluginMap[resourceName][op] = [];
+        pluginMap[resourceName][op].push(pi);
     }
 
     public resources(resourceName: string) {
@@ -211,16 +224,27 @@ export class RouterBuilder {
         return {
             ops: (op: OperationName) => {
                 if (!resource.operations || !(op in resource.operations)) {
-                    throw new Error(`Error registering op callback, operation ${op} not specified for resource "${name}"`);
+                    throw new Error(`Error registering op plugin, operation ${op} not specified for resource "${name}"`);
                 }
 
                 const subscriber: OpSubscriber<any> = {} as OpSubscriber<any>;
-                // TODO: rename onSuccess -> something like 'afterQuery/Op' or something
-                subscriber.onSuccess = handler => {
-                    self.registerSuccessCallback(
+                subscriber.beforeOp = plugin => {
+                    self.registerPlugin(
+                        self.preOpPlugins,
                         resourceName,
                         op,
-                        handler
+                        plugin,
+                    );
+
+                    return subscriber;
+                }
+                // TODO: rename onSuccess -> something like 'afterQuery/Op' or something
+                subscriber.onSuccess = plugin => {
+                    self.registerPlugin(
+                        self.postOpPlugins,
+                        resourceName,
+                        op,
+                        plugin
                     );
                     return subscriber;
                 };
