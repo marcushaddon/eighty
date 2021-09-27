@@ -56,6 +56,7 @@ var uuid_1 = require("uuid");
 var eighty_1 = require("./eighty");
 var errors_1 = require("./errors");
 var mockAuth_1 = require("./fixtures/mockAuth");
+var db_1 = require("./db");
 var mockDb_1 = require("./fixtures/mockDb");
 describe('replace', function () {
     ['mongodb'].forEach(function (db) {
@@ -70,6 +71,7 @@ describe('replace', function () {
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
+                        db_1.DbClients.set('mock', function () { return mockDb_1.mockDbClient; });
                         _a = eighty_1.eighty({
                             schemaRaw: "\n                version: \"1.0.0\"\n\n                database:\n                  type: mock\n                \n                resources:\n                  - name: user\n                    schemaPath: ./src/fixtures/schemas/user.yaml\n                    operations:\n                      getOne:\n                        authentication: false\n                      replace:\n                        authentication: true\n                  - name: book\n                    schemaPath: ./src/fixtures/schemas/book.yaml\n                    operations:\n                      getOne:\n                        authentication: false\n                      replace:\n                        authentication: false\n                "
                         }).build(), router = _a.router, init = _a.init, tearDown = _a.tearDown;

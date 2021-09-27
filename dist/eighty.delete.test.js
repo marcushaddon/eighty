@@ -43,6 +43,7 @@ var express_1 = __importDefault(require("express"));
 var supertest_1 = __importDefault(require("supertest"));
 var uuid_1 = require("uuid");
 var mockAuth_1 = require("./fixtures/mockAuth");
+var db_1 = require("./db");
 var mockDb_1 = require("./fixtures/mockDb");
 var eighty_1 = require("./eighty");
 var errors_1 = require("./errors");
@@ -53,6 +54,7 @@ describe('delete', function () {
         beforeAll(function () { return __awaiter(void 0, void 0, void 0, function () {
             var _a, router, tearDown;
             return __generator(this, function (_b) {
+                db_1.DbClients.set('mock', function () { return mockDb_1.mockDbClient; });
                 _a = eighty_1.eighty({
                     schemaRaw: "\n                version: \"1.0.0\"\n\n                database:\n                  type: mock\n                \n                resources:\n                  - name: user\n                    schemaPath: ./src/fixtures/schemas/user.yaml\n                    operations:\n                      getOne:\n                        authentication: false\n                      delete:\n                        authentication: true\n\n                  - name: book\n                    schemaPath: ./src/fixtures/schemas/book.yaml\n                    operations:\n                      getOne:\n                        authentication: false\n                      delete:\n                        authentication: false\n                ",
                 }).build(), router = _a.router, tearDown = _a.tearDown;

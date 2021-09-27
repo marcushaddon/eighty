@@ -46,8 +46,10 @@ var eighty_1 = require("./eighty");
 var errors_1 = require("./errors");
 var mockAuth_1 = require("./fixtures/mockAuth");
 var mockDb_1 = require("./fixtures/mockDb");
+var db_1 = require("./db");
 describe('getOne', function () {
     ['mongodb'].forEach(function (db) {
+        db_1.DbClients.set('mock', function () { return mockDb_1.mockDbClient; });
         var uut;
         var tearDownEighty;
         var user;

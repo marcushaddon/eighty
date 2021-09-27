@@ -56,6 +56,7 @@ var uuid_1 = require("uuid");
 var eighty_1 = require("./eighty");
 var mockAuth_1 = require("./fixtures/mockAuth");
 var mockDb_1 = require("./fixtures/mockDb");
+var db_1 = require("./db");
 jest.mock('./db/mongodb', function () { });
 describe('create', function () {
     ['mock'].forEach(function (db) {
@@ -66,6 +67,7 @@ describe('create', function () {
         beforeAll(function () { return __awaiter(void 0, void 0, void 0, function () {
             var _a, router, tearDown;
             return __generator(this, function (_b) {
+                db_1.DbClients.set('mock', function () { return mockDb_1.mockDbClient; });
                 uut = express_1.default();
                 builder = eighty_1.eighty({
                     schemaRaw: testSchema,

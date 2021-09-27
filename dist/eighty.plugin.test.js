@@ -86,6 +86,7 @@ var supertest_1 = __importDefault(require("supertest"));
 var express_1 = __importDefault(require("express"));
 var uuid_1 = require("uuid");
 var _1 = require(".");
+var db_1 = require("./db");
 var mockDb_1 = require("./fixtures/mockDb");
 var mockAuth_1 = require("./fixtures/mockAuth");
 var errors_1 = require("./errors");
@@ -116,6 +117,7 @@ describe('plugins', function () {
     };
     beforeEach(function () {
         var e_1, _a;
+        db_1.DbClients.set('mock', function () { return mockDb_1.mockDbClient; });
         books = __spreadArray([], __read(Array(30))).map(function (_, i) { return ({
             title: 'mock book',
             pages: 5 * i,
