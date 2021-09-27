@@ -1,11 +1,13 @@
 import { Request, Response, Express, NextFunction } from "express";
 import { OperationName } from "./operation";
+import { Logger } from "../logging/Logger";
 /**
  * These are mostly for creating a type safe 'builder' /
  * fluent api for the RouterBuilder.
  */
 export declare type PluginMiddleware<T> = (req: Request & {
     resource: T;
+    logger: Logger;
 }, res: Response, next: NextFunction) => void | Promise<void>;
 export declare type PluginRegistrar<T> = (plugin: PluginMiddleware<T>) => OpsFinder<T>;
 export declare type OpSubscriber<T> = {
