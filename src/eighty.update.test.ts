@@ -3,7 +3,6 @@ import request from 'supertest';
 import { eighty } from './eighty';
 import { mockAuthenticator } from './fixtures/mockAuth';
 import { buildMongoFixtures, cleanupMongoFixtures } from './fixtures';
-import { EightyRouter } from './types/plugin';
 
 describe('updateOp', () => {
     ['mongodb'].forEach(db => {

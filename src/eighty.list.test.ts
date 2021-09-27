@@ -4,7 +4,6 @@ import request from 'supertest';
 import { eighty } from './eighty';
 import { buildMongoFixtures, cleanupMongoFixtures } from './fixtures'; 
 import { mockAuthenticator } from './fixtures/mockAuth';
-import { EightyRouter } from './types/plugin';
 
 describe('list', () => {
     ['mongodb'].forEach(db => {

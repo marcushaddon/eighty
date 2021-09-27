@@ -1,13 +1,11 @@
 import express, { Handler, Express } from 'express';
 import request from 'supertest';
 import { v4 as uuid } from 'uuid';
-import { buildMongoFixtures, cleanupMongoFixtures } from './fixtures';
 import { mockAuthenticator } from './fixtures/mockAuth';
+import { DbClients } from './db';
 import { mockDbClient } from './fixtures/mockDb';
 import { eighty } from './eighty';
-import { EightyRouter } from './types/plugin';
 import { NotFoundError } from './errors';
-import { loadSchema } from './buildResourceSchemas';
 
 describe('delete', () => {
     ['mongodb'].forEach(db => {
@@ -16,6 +14,8 @@ describe('delete', () => {
         let teardownEighty: () => Promise<void>;
 
         beforeAll(async () => {
+            DbClients.set('mock', () => mockDbClient);
+
             const { router, tearDown } = eighty({
                 schemaRaw: `
                 version: "1.0.0"
