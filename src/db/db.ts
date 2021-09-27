@@ -1,10 +1,8 @@
-import * as process from 'process';
 import * as jsonpatch from 'fast-json-patch';
 import { Database, EightyRecord } from '../types/database';
 import { MongoDbClient } from './mongodb';
 import { PaginatedResponse } from '../types/api';
 import { Resource } from '../types/resource';
-import { mockDbClient } from '../fixtures/mockDb';
 
 export type ListOps = {
     resource: Resource,
@@ -31,7 +29,7 @@ export const resolveDbClient = (dbConfig: Database): IDBClient => {
 }
 
 export const DbClients = new Map<string, () => IDBClient>([
-    [ 'mock', () => mockDbClient ],
+    // [ 'mock', () => mockDbClient ],
     // [ 'postgres', () => new PostgresClient() ],
     [ 'mongodb', () => new MongoDbClient() ],
 ]);

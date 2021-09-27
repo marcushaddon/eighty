@@ -2,6 +2,7 @@ import request from "supertest";
 import express, { Express } from 'express';
 import { v4 as uuid } from 'uuid';
 import { eighty } from ".";
+import { DbClients } from "./db";
 import { mockDbClient } from "./fixtures/mockDb";
 import { mockAuthenticator } from './fixtures/mockAuth';
 import { EightySchema } from "./types/schema";
@@ -35,6 +36,8 @@ describe('plugins', () => {
     };
 
     beforeEach(() => {
+        DbClients.set('mock', () => mockDbClient);
+
         books = [ ...Array(30) ].map((_, i) => ({
             title: 'mock book',
             pages: 5 * i,

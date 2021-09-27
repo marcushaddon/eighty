@@ -3,8 +3,8 @@ import request from 'supertest';
 import { v4 as uuid } from 'uuid';
 import { eighty } from './eighty';
 import { NotFoundError } from './errors';
-import { buildMongoFixtures, cleanupMongoFixtures } from './fixtures';
 import { mockAuthenticator } from "./fixtures/mockAuth";
+import { DbClients } from './db';
 import { mockDbClient } from './fixtures/mockDb';
 
 describe('replace', () => {
@@ -21,6 +21,7 @@ describe('replace', () => {
         let uut: Express;
 
         beforeAll(async() => {
+            DbClients.set('mock', () => mockDbClient);
             const { router, init, tearDown } = eighty({
                 schemaRaw: `
                 version: "1.0.0"

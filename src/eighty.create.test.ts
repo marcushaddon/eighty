@@ -4,6 +4,7 @@ import { v4 as uuid } from 'uuid';
 import { eighty } from './eighty';
 import { mockAuthenticator } from './fixtures/mockAuth';
 import { mockDbClient } from './fixtures/mockDb';
+import { DbClients } from './db';
 import { RouterBuilder } from './RouterBuilder';
 
 jest.mock('./db/mongodb', () => { })
@@ -37,6 +38,8 @@ describe('create', () => {
         let tearDownEighty: () => Promise<void>;
 
         beforeAll(async () => {
+            DbClients.set('mock', () => mockDbClient);
+
             uut = express();
 
             builder = eighty({

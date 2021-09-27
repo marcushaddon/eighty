@@ -3,13 +3,14 @@ import request from 'supertest';
 import { v4 as uuid } from 'uuid';
 import { eighty } from './eighty';
 import { NotFoundError } from './errors';
-import { buildMongoFixtures, cleanupMongoFixtures } from './fixtures'; 
 import { mockAuthenticator } from './fixtures/mockAuth';
 import { mockDbClient } from './fixtures/mockDb';
-import { EightyRouter } from './types/plugin';
+import { DbClients } from './db';
 
 describe('getOne', () => {
     ['mongodb'].forEach(db => {
+        DbClients.set('mock', () => mockDbClient);
+
         let uut: Express;
         let tearDownEighty: () => Promise<void>;
         let user: any;
