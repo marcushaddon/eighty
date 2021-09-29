@@ -224,7 +224,7 @@ export class RouterBuilder {
         return {
             ops: (op: OperationName) => {
                 if (!resource.operations || !(op in resource.operations)) {
-                    throw new Error(`Error registering op plugin, operation ${op} not specified for resource "${name}"`);
+                    throw new Error(`Error registering op plugin, operation ${op} not specified for resource "${resource.name}"`);
                 }
 
                 const subscriber: OpSubscriber<any> = {} as OpSubscriber<any>;
