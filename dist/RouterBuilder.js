@@ -191,6 +191,7 @@ var RouterBuilder = /** @class */ (function () {
                 req.logger.error("Encountered error performing " + op + " on " + resource.name, error);
                 return res.status(status).json(error).end();
             }
+            req.logger.info("Successfully completed \"" + op + "\" on resource \"" + resource.name + "\"");
             return res.status(status).json(resource).end();
         });
         var expressRoute = util_1.getRoute(op, resource).expressRoute;
