@@ -222,7 +222,7 @@ var RouterBuilder = /** @class */ (function () {
         return {
             ops: function (op) {
                 if (!resource.operations || !(op in resource.operations)) {
-                    throw new Error("Error registering op plugin, operation " + op + " not specified for resource \"" + name + "\"");
+                    throw new Error("Error registering op plugin, operation " + op + " not specified for resource \"" + resource.name + "\"");
                 }
                 var subscriber = {};
                 subscriber.beforeOp = function (plugin) {
