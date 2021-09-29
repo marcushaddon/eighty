@@ -182,6 +182,8 @@ export class RouterBuilder {
                 return res.status(status).json(error).end();
             }
 
+            (req as any).logger.info(`Successfully completed "${op}" on resource "${resource.name}"`);
+
             return res.status(status).json(resource).end();
         });
 
